@@ -82,7 +82,7 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   await connectDB();
   connectRedis();
-  server.listen(PORT, () => {
+  server.listen(PORT, '0.0.0.0', () => {
     console.log(`\n🚀 ECHO Backend running on http://localhost:${PORT}`);
     console.log(`📡 Socket.io ready`);
     console.log(`🌍 Frontend: ${process.env.FRONTEND_URL || 'http://localhost:5173'}\n`);
