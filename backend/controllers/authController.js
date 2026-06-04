@@ -5,6 +5,8 @@ const OTP = require('../models/OTP');
 const generateToken = require('../utils/generateToken');
 const { sendOTPEmail } = require('../utils/sendOTP');
 
+const AppConfig = require('../models/AppConfig');
+
 // ─── POST /auth/register ──────────────────────────────────────────────────────
 const register = async (req, res) => {
   try {
@@ -29,6 +31,36 @@ const register = async (req, res) => {
 
     // Hash password
     const passwordHash = await bcrypt.hash(password, 12);
+
+    // Check configuration
+    let config = await AppConfig.findOne({ key: 'main_config' });
+    if (!config) {
+      config = await AppConfig.create({ key: 'main_config' });
+    }
+
+    if (config.features?.otpVerification === false) {
+      // Create user immediately (bypass OTP)
+      const user = await User.create({
+        username: usernameLower,
+        email: emailLower,
+        passwordHash,
+        provider: 'local',
+        isVerified: true,
+      });
+
+      const token = generateToken(user);
+      return res.status(201).json({
+        message: 'Registration successful! ✅',
+        token,
+        user: {
+          _id: user._id,
+          username: user.username,
+          email: user.email,
+          avatar: user.avatar,
+          isAdmin: user.isAdmin,
+        },
+      });
+    }
 
     // Generate 6-digit OTP
     const otp = crypto.randomInt(100000, 999999).toString();

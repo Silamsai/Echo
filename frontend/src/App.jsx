@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useEffect } from 'react';
 import useAuthStore from './store/authStore';
@@ -16,42 +16,28 @@ import Admin from './pages/Admin';
 import Settings from './pages/Settings';
 import Sidebar from './components/Sidebar';
 
-const AppLayout = ({ page: Page }) => {
+import LeftNavbar from './components/LeftNavbar';
+import useConfigStore from './store/configStore';
+import useChatStore from './store/chatStore';
+
+const ProtectedLayout = ({ children }) => {
   const { user } = useAuthStore();
-  const navigate = useNavigate();
+  const { activeConversation } = useChatStore();
+  const location = useLocation();
+  const isChatOpenOnMobile = location.pathname === '/' && activeConversation;
+
   if (!user) return <Navigate to="/login" replace />;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#0a0a0f]">
-      {/* Sidebar hidden on mobile, visible on desktop */}
-      <div className="hidden md:flex flex-shrink-0 h-full">
-        <Sidebar onSelectConversation={() => {}} activeConversation={null} />
-      </div>
+    <div className="flex h-screen overflow-hidden bg-[#0a0a0f] text-[#e8e6ff]">
+      {/* Dynamic Sidebar / Nav rail */}
+      <LeftNavbar />
       
-      {/* Content area */}
-      <div className="flex-1 overflow-hidden flex flex-col">
-        {/* Mobile top header with back button */}
-        <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-white/5 bg-[#111118] flex-shrink-0">
-          <button
-            onClick={() => navigate('/')}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
-            title="Back to Chats"
-          >
-            <ArrowLeft size={18} />
-          </button>
-          <div className="text-[18px] font-black tracking-tight" style={{
-            background: 'linear-gradient(90deg, #7b6ef6, #6eb5ff)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            fontFamily: '"Inter", -apple-system, sans-serif'
-          }}>
-            echo
-          </div>
-          <div className="w-8" /> {/* Spacer to center the logo */}
-        </div>
-        
-        <Page />
+      {/* Page content wrapper with bottom padding on mobile for tabs */}
+      <div className={`flex-1 overflow-hidden flex flex-col relative md:pb-0 ${
+        isChatOpenOnMobile ? 'pb-0' : 'pb-[64px]'
+      }`}>
+        {children}
       </div>
     </div>
   );
@@ -59,9 +45,12 @@ const AppLayout = ({ page: Page }) => {
 
 const App = () => {
   const { initialize, isInitialized, user } = useAuthStore();
+  const { fetchConfig } = useConfigStore();
 
   useEffect(() => {
     initialize();
+    fetchConfig(); // Load branding & features config
+    
     // Initialize theme, default to dark
     const theme = localStorage.getItem('theme') || 'dark';
     if (theme === 'dark') {
@@ -69,7 +58,7 @@ const App = () => {
     } else {
       document.documentElement.classList.remove('dark');
     }
-  }, [initialize]);
+  }, [initialize, fetchConfig]);
 
   if (!isInitialized) {
     return (
@@ -130,16 +119,16 @@ const App = () => {
         <Route path="/verify-otp" element={user ? <Navigate to="/" replace /> : <VerifyOTP />} />
         <Route path="/google-success" element={<GoogleSuccess />} />
 
-        {/* Protected routes */}
-        <Route path="/" element={!user ? <Navigate to="/login" replace /> : <Home />} />
-        <Route path="/search" element={<AppLayout page={Search} />} />
-        <Route path="/notifications" element={<AppLayout page={Notifications} />} />
-        <Route path="/profile" element={<AppLayout page={Profile} />} />
-        <Route path="/settings" element={<AppLayout page={Settings} />} />
+        {/* Protected routes wrapped in ProtectedLayout */}
+        <Route path="/" element={<ProtectedLayout><Home /></ProtectedLayout>} />
+        <Route path="/search" element={<ProtectedLayout><Search /></ProtectedLayout>} />
+        <Route path="/notifications" element={<ProtectedLayout><Notifications /></ProtectedLayout>} />
+        <Route path="/profile" element={<ProtectedLayout><Profile /></ProtectedLayout>} />
+        <Route path="/settings" element={<ProtectedLayout><Settings /></ProtectedLayout>} />
         <Route path="/admin" element={
           !user ? <Navigate to="/login" replace /> :
           !user?.isAdmin ? <Navigate to="/" replace /> :
-          <AppLayout page={Admin} />
+          <ProtectedLayout><Admin /></ProtectedLayout>
         } />
 
         {/* Catch-all */}

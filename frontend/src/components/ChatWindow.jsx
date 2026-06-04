@@ -13,6 +13,7 @@ import useChatStore from '../store/chatStore';
 import useAuthStore from '../store/authStore';
 import useMediaRecorder from '../hooks/useMediaRecorder';
 import { formatLastSeen } from '../utils/formatTime';
+import useConfigStore from '../store/configStore';
 
 /* ─── Utility ─── */
 const getAvatar = (u) => u?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u?.username}`;
@@ -23,6 +24,7 @@ const makeRoomName = (conversationId) => `echo_room_${conversationId}`;
 const ChatWindow = ({ conversation, onBack }) => {
   const { user, updateUser } = useAuthStore();
   const { messages, setMessages, typingUsers, addMessage, updateLastMessage } = useChatStore();
+  const { config } = useConfigStore();
 
   const [text, setText] = useState('');
   const [imageFile, setImageFile] = useState(null);
@@ -347,24 +349,28 @@ const ChatWindow = ({ conversation, onBack }) => {
 
             <div className="flex items-center gap-2">
               {/* Voice Call */}
-              <button
-                onClick={() => startCall('audio')}
-                disabled={callState !== 'idle'}
-                className="w-8 h-8 rounded-lg flex items-center justify-center border border-white/5 bg-[#16161f] text-slate-500 hover:text-green-400 hover:border-green-500/20 transition-all duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                title="Voice Call"
-              >
-                <Phone size={14} />
-              </button>
+              {config?.features?.voiceCalls !== false && (
+                <button
+                  onClick={() => startCall('audio')}
+                  disabled={callState !== 'idle'}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center border border-white/5 bg-[#16161f] text-slate-500 hover:text-green-400 hover:border-green-500/20 transition-all duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  title="Voice Call"
+                >
+                  <Phone size={14} />
+                </button>
+              )}
 
               {/* Video Call */}
-              <button
-                onClick={() => startCall('video')}
-                disabled={callState !== 'idle'}
-                className="w-8 h-8 rounded-lg flex items-center justify-center border border-white/5 bg-[#16161f] text-slate-500 hover:text-[#7c6dfa] hover:border-[#7c6dfa]/20 transition-all duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                title="Video Call"
-              >
-                <Video size={14} />
-              </button>
+              {config?.features?.videoCalls !== false && (
+                <button
+                  onClick={() => startCall('video')}
+                  disabled={callState !== 'idle'}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center border border-white/5 bg-[#16161f] text-slate-500 hover:text-[#7c6dfa] hover:border-[#7c6dfa]/20 transition-all duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  title="Video Call"
+                >
+                  <Video size={14} />
+                </button>
+              )}
 
               <button
                 onClick={() => setShowInfo(!showInfo)}
@@ -443,19 +449,23 @@ const ChatWindow = ({ conversation, onBack }) => {
             <div className="flex items-center bg-[#16161f] border border-white/5 rounded-xl px-3 py-1.5 focus-within:border-[#7c6dfa]/35 transition-all">
               {isBlocked ? (
                 <div className="flex-1 text-center text-red-400 text-xs font-mono py-2 flex items-center justify-center gap-2 select-none">
-                  🚫 You have blocked this user. Unblock to send messages.
+                  <ShieldAlert size={14} className="text-red-400" /> You have blocked this user. Unblock to send messages.
                 </div>
               ) : (
                 <>
-                  <button
-                    id="image-btn"
-                    onClick={() => imageInputRef.current?.click()}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-[#7c6dfa] hover:bg-[#7c6dfa]/10 transition-all flex-shrink-0 cursor-pointer"
-                    title="Attach Image"
-                  >
-                    <ImageIcon size={16} />
-                  </button>
-                  <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+                  {config?.features?.imageSharing !== false && (
+                    <>
+                      <button
+                        id="image-btn"
+                        onClick={() => imageInputRef.current?.click()}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-[#7c6dfa] hover:bg-[#7c6dfa]/10 transition-all flex-shrink-0 cursor-pointer"
+                        title="Attach Image"
+                      >
+                        <ImageIcon size={16} />
+                      </button>
+                      <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+                    </>
+                  )}
 
                   {!isRecording && !audioUrl && (
                     <textarea
@@ -485,16 +495,18 @@ const ChatWindow = ({ conversation, onBack }) => {
                   )}
 
                   {!text.trim() && !imageFile ? (
-                    <button
-                      id="mic-btn"
-                      onClick={isRecording ? stopRecording : startRecording}
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all cursor-pointer ${
-                        isRecording ? 'bg-red-500 text-white' : 'text-slate-500 hover:text-[#7c6dfa] hover:bg-[#7c6dfa]/10'
-                      }`}
-                      title={isRecording ? 'Stop Recording' : 'Record Voice'}
-                    >
-                      {isRecording ? <MicOff size={16} /> : <Mic size={16} />}
-                    </button>
+                    config?.features?.voiceNotes !== false && (
+                      <button
+                        id="mic-btn"
+                        onClick={isRecording ? stopRecording : startRecording}
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all cursor-pointer ${
+                          isRecording ? 'bg-red-500 text-white' : 'text-slate-500 hover:text-[#7c6dfa] hover:bg-[#7c6dfa]/10'
+                        }`}
+                        title={isRecording ? 'Stop Recording' : 'Record Voice'}
+                      >
+                        {isRecording ? <MicOff size={16} /> : <Mic size={16} />}
+                      </button>
+                    )
                   ) : (
                     <button
                       id="send-btn"

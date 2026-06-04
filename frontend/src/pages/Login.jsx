@@ -1,186 +1,39 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { MessageSquare, Lock, Mic, Globe, Shield, Mail, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useAuthStore from '../store/authStore';
 
 const GOOGLE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/auth/google`;
-const CARD_BASE_H = 500;
 
-/* ─── Styles ─── */
-const S = {
-  page: {
-    position: 'fixed', inset: 0,
-    background: 'linear-gradient(135deg, #08081a 0%, #0d0d22 50%, #0a0818 100%)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontFamily: '"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif',
-  },
-  card: {
-    width: '100%', maxWidth: '620px',
-    borderRadius: '16px', overflow: 'hidden',
-    display: 'flex', boxShadow: '0 24px 80px rgba(0,0,0,0.65)',
-    transformOrigin: 'center center',
-  },
-  left: {
-    flex: '0 0 40%',
-    background: 'linear-gradient(170deg, #0b0f33 0%, #0d1040 40%, #11083a 75%, #0e0c35 100%)',
-    padding: '32px 24px 26px',
-    display: 'flex', flexDirection: 'column',
-    position: 'relative', overflow: 'hidden',
-  },
-  logoRow: { display: 'flex', alignItems: 'center', gap: '8px' },
-  logoText: { color: '#ffffff', fontSize: '20px', fontWeight: 700, letterSpacing: '-0.3px' },
-  tagline: {
-    color: '#ffffff', fontSize: '22px', fontWeight: 800,
-    lineHeight: 1.25, margin: '20px 0 6px', letterSpacing: '-0.3px',
-  },
-  accent: { color: '#7c72ff' },
-  desc: { color: 'rgba(255,255,255,0.5)', fontSize: '11.5px', lineHeight: 1.6, margin: 0 },
-  featureList: { marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 },
-  featureItem: { display: 'flex', alignItems: 'center', gap: '10px' },
-  featureDot: {
-    width: '28px', height: '28px', borderRadius: '8px', flexShrink: 0,
-    background: 'rgba(124,114,255,0.18)', border: '1px solid rgba(124,114,255,0.3)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: '13px',
-  },
-  featureText: { color: 'rgba(255,255,255,0.7)', fontSize: '11px', lineHeight: 1.4 },
-  badge: {
-    display: 'flex', alignItems: 'center', gap: '7px',
-    background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: '8px', padding: '7px 10px', marginTop: 'auto',
-  },
-  badgeIcon: {
-    width: '22px', height: '22px', borderRadius: '50%', flexShrink: 0,
-    background: 'rgba(120,110,255,0.2)', border: '1px solid rgba(120,110,255,0.35)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-  },
-  badgeT1: { color: '#dde0ff', fontSize: '9.5px', fontWeight: 600, margin: 0, lineHeight: 1.4 },
-  badgeT2: { color: 'rgba(255,255,255,0.4)', fontSize: '9px', margin: 0 },
-
-  right: {
-    flex: 1, background: '#ffffff',
-    padding: '28px 32px 22px',
-    display: 'flex', flexDirection: 'column', justifyContent: 'center',
-  },
-  title: { color: '#0f172a', fontSize: '20px', fontWeight: 700, textAlign: 'center', margin: '0 0 2px', letterSpacing: '-0.3px' },
-  subtitle: { color: '#6b7280', fontSize: '11.5px', textAlign: 'center', margin: '0 0 16px' },
-  oauthBtn: {
-    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-    width: '100%', padding: '9px 12px', borderRadius: '8px',
-    border: '1px solid #e0e4ef', background: '#ffffff',
-    color: '#1e293b', fontSize: '12.5px', fontWeight: 500,
-    cursor: 'pointer', textDecoration: 'none', boxSizing: 'border-box',
-    transition: 'background 0.15s',
-  },
-  divider: { display: 'flex', alignItems: 'center', gap: '10px', margin: '14px 0 12px' },
-  divLine: { flex: 1, height: '1px', background: '#e5e7eb' },
-  divText: { color: '#9ca3af', fontSize: '11px' },
-  label: { display: 'block', color: '#374151', fontSize: '11px', fontWeight: 500, marginBottom: '3px' },
-  fieldWrap: {
-    display: 'flex', alignItems: 'center',
-    border: '1px solid #e0e4ef', borderRadius: '7px',
-    background: '#f8f9fc', overflow: 'hidden',
-    transition: 'border-color 0.15s, box-shadow 0.15s',
-  },
-  fieldInput: {
-    flex: 1, border: 'none', background: 'transparent',
-    padding: '9px 6px', fontSize: '13px', color: '#1e293b', outline: 'none',
-  },
-  fieldIcon: { padding: '0 10px', color: '#9ca3af', flexShrink: 0, display: 'flex', alignItems: 'center' },
-  eyeBtn: {
-    padding: '0 10px', background: 'none', border: 'none',
-    cursor: 'pointer', color: '#9ca3af', flexShrink: 0, display: 'flex', alignItems: 'center',
-  },
-  submitBtn: {
-    width: '100%', padding: '10px',
-    borderRadius: '8px', border: 'none',
-    background: 'linear-gradient(90deg, #7b6ef6 0%, #5956e9 100%)',
-    color: '#ffffff', fontSize: '13px', fontWeight: 600,
-    cursor: 'pointer', boxShadow: '0 3px 12px rgba(120,110,246,0.38)',
-    transition: 'box-shadow 0.15s',
-    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-    marginTop: '6px',
-  },
-  bottomRow: { textAlign: 'center', color: '#6b7280', fontSize: '12px', marginTop: '14px' },
-  link: { color: '#7b6ef6', fontWeight: 600, textDecoration: 'none', marginLeft: '4px' },
-};
-
-const onFocus = e => {
-  e.currentTarget.style.borderColor = '#7b6ef6';
-  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(123,110,246,0.15)';
-};
-const onBlur = e => {
-  e.currentTarget.style.borderColor = '#e0e4ef';
-  e.currentTarget.style.boxShadow = 'none';
-};
-
-/* ─── Echo Logo Mark ─── */
 const EchoMark = ({ size = 32 }) => (
   <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
     <defs>
-      <linearGradient id="lm-g" x1="20%" y1="10%" x2="80%" y2="90%">
+      <linearGradient id="login-logo-g" x1="20%" y1="10%" x2="80%" y2="90%">
         <stop offset="0%" stopColor="#6eb5ff" />
         <stop offset="50%" stopColor="#7b6ef6" />
         <stop offset="100%" stopColor="#5956e9" />
       </linearGradient>
     </defs>
-    <path d="M50 12C73.2 12 92 30.8 92 54C92 77.2 73.2 96 50 96C41 96 32.6 93.2 25.8 88.3C15.6 93.3 7.5 95.5 6.7 95.6C5.9 95.7 5.1 95 5.3 94.1C5.9 91.3 8.7 81.4 12.8 73.9C8.3 67.9 5.7 60.3 5.7 54C5.7 30.8 26.8 12 50 12Z" fill="url(#lm-g)" />
+    <path d="M50 12C73.2 12 92 30.8 92 54C92 77.2 73.2 96 50 96C41 96 32.6 93.2 25.8 88.3C15.6 93.3 7.5 95.5 6.7 95.6C5.9 95.7 5.1 95 5.3 94.1C5.9 91.3 8.7 81.4 12.8 73.9C8.3 67.9 5.7 60.3 5.7 54C5.7 30.8 26.8 12 50 12Z" fill="url(#login-logo-g)" />
     <path d="M50 34C38.4 34 29 43.4 29 55C29 66.6 38.4 76 50 76C58.6 76 66 71 69.2 63.6L57.8 63.6C55.6 66.9 53 68 50 68C44.4 68 39.8 63.8 39 58L71 58C71 57 71 56 71 55C71 43.4 61.6 34 50 34ZM50 42C54 42 57.2 44.8 58.6 48.6L41.4 48.6C42.8 44.8 46 42 50 42Z" fill="#ffffff" />
   </svg>
 );
 
-const ShieldIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7b6ef6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-  </svg>
-);
-
-const MailIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-  </svg>
-);
-
-const LockIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-  </svg>
-);
-
-const EyeIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-  </svg>
-);
-
-const EyeOffIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
-  </svg>
-);
-
-/* ─── Main Component ─── */
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
-  const [scale, setScale] = useState(1);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { login, isLoading } = useAuthStore();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const update = () => {
-      const vh = window.innerHeight;
-      const vw = window.innerWidth;
-      setIsMobile(vw < 640);
-      const scaleH = (vh - 32) / CARD_BASE_H;
-      const scaleW = (vw - 32) / 620;
-      setScale(Math.min(1, scaleH, scaleW));
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
     };
-    update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const handleSubmit = async (e) => {
@@ -195,88 +48,94 @@ const Login = () => {
     }
   };
 
-  const cardStyle = isMobile ? {
-    width: '100%',
-    height: '100vh',
-    maxHeight: '100vh',
-    borderRadius: '0',
-    overflowY: 'auto',
-    display: 'flex',
-    flexDirection: 'column',
-    boxShadow: 'none',
-  } : S.card;
-
-  const leftPanelStyle = isMobile ? {
-    display: 'none',
-  } : S.left;
-
-  const rightPanelStyle = isMobile ? {
-    flex: 1,
-    background: '#ffffff',
-    padding: '24px 20px',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    minHeight: '100%',
-    boxSizing: 'border-box',
-  } : S.right;
-
   return (
-    <div style={S.page}>
-      <div style={isMobile ? cardStyle : { ...cardStyle, transform: `scale(${scale})` }}>
+    <div className="min-h-screen w-screen flex items-center justify-center p-4 md:p-6 overflow-y-auto select-none bg-[#07070c] relative">
+      {/* Dynamic Background Glows */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[#7b6ef6]/8 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[#5956e9]/6 blur-[120px] pointer-events-none" />
 
-        {/* ══ LEFT PANEL ══ */}
-        <div style={leftPanelStyle}>
-          {/* sparkle dots */}
-          {[[8,14],[18,70],[28,42],[38,88],[52,18],[62,60],[72,30],[82,80]].map(([t,l],i) => (
-            <div key={i} style={{ position:'absolute', borderRadius:'50%', background:'rgba(255,255,255,0.45)', width: i%3===0?'3px':'2px', height: i%3===0?'3px':'2px', top:t+'%', left:l+'%' }} />
-          ))}
+      {/* Main Glass Card */}
+      <div className="w-full max-w-[840px] rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-[0_30px_100px_rgba(0,0,0,0.8)] border border-white/5 bg-[#0e0e15]/40 backdrop-blur-xl z-10 animate-fade-in">
+        
+        {/* LEFT COLUMN: Features Panel (Hidden on Mobile) */}
+        {!isMobile && (
+          <div className="w-[42%] bg-gradient-to-br from-[#0c0c16] to-[#121226] p-10 flex flex-col justify-between border-r border-white/5 relative overflow-hidden">
+            {/* Sparkles overlay */}
+            <div className="absolute inset-0 opacity-20 pointer-events-none">
+              <div className="absolute top-10 left-20 w-1 h-1 bg-white rounded-full animate-ping" />
+              <div className="absolute top-40 left-10 w-1 h-1 bg-white rounded-full animate-pulse" />
+              <div className="absolute bottom-20 left-32 w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+            </div>
 
-          <div style={S.logoRow}>
-            <EchoMark size={30} />
-            <span style={S.logoText}>echo</span>
-          </div>
+            {/* Header */}
+            <div className="flex items-center gap-3">
+              <EchoMark size={32} />
+              <span className="text-white text-xl font-black tracking-tight font-sans">echo</span>
+            </div>
 
-          <h2 style={S.tagline}>
-            Welcome<br />
-            <span style={S.accent}>back.</span>
-          </h2>
-          <p style={S.desc}>Sign in to continue your conversations where you left off.</p>
+            {/* Tagline */}
+            <div className="my-8">
+              <h2 className="text-2xl font-black text-white leading-tight">
+                Welcome <br />
+                <span className="bg-gradient-to-r from-[#7b6ef6] to-[#6eb5ff] bg-clip-text text-transparent">back.</span>
+              </h2>
+              <p className="text-slate-400 text-xs mt-3 leading-relaxed">
+                Connect securely with your team or friends in real-time, share files, and hold voice or video calls.
+              </p>
+            </div>
 
-          <div style={S.featureList}>
-            {[
-              { icon: '💬', text: 'Real-time messaging with instant delivery' },
-              { icon: '🔒', text: 'End-to-end encrypted conversations' },
-              { icon: '🎙️', text: 'Voice notes & image sharing' },
-              { icon: '🌐', text: 'Stay connected anywhere, anytime' },
-            ].map(({ icon, text }, i) => (
-              <div key={i} style={S.featureItem}>
-                <span style={S.featureDot}>{icon}</span>
-                <span style={S.featureText}>{text}</span>
+            {/* Features List */}
+            <div className="space-y-4 my-auto">
+              {[
+                { icon: MessageSquare, text: 'Real-time chatting with messaging queues', color: 'text-[#7b6ef6]' },
+                { icon: Shield, text: 'Secure accounts with verified sessions', color: 'text-[#22c55e]' },
+                { icon: Mic, text: 'Voice notes and rich image attachments', color: 'text-[#ec4899]' },
+                { icon: Globe, text: 'Stay connected on web or mobile devices', color: 'text-[#06b6d4]' },
+              ].map((feat, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
+                    <feat.icon size={15} className={feat.color} />
+                  </div>
+                  <span className="text-slate-300 text-[11px] leading-snug">{feat.text}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer Trust Strip */}
+            <div className="mt-8 pt-4 border-t border-white/5 flex items-center gap-3 text-slate-500">
+              <Shield size={14} className="text-slate-600" />
+              <div className="text-[10px]">
+                <p className="font-semibold text-slate-400">Encrypted Workspace</p>
+                <p className="text-[9px] text-slate-500">Privacy & Security guaranteed.</p>
               </div>
-            ))}
-          </div>
-
-          <div style={S.badge}>
-            <div style={S.badgeIcon}><ShieldIcon /></div>
-            <div>
-              <p style={S.badgeT1}>Your conversations are</p>
-              <p style={S.badgeT2}>end-to-end encrypted.</p>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* ══ RIGHT PANEL ══ */}
-        <div style={rightPanelStyle}>
-          <h1 style={S.title}>Sign in to Echo</h1>
-          <p style={S.subtitle}>Enter your credentials to access your account</p>
+        {/* RIGHT COLUMN: Login Form */}
+        <div className="flex-1 bg-[#0b0b11]/80 p-8 md:p-12 flex flex-col justify-center min-h-[480px]">
+          
+          {/* Logo showing only on mobile */}
+          {isMobile && (
+            <div className="flex justify-center mb-6">
+              <div className="flex items-center gap-2">
+                <EchoMark size={36} />
+                <span className="text-white text-2xl font-black tracking-tight">echo</span>
+              </div>
+            </div>
+          )}
 
-          {/* Google */}
-          <a href={GOOGLE_URL} style={S.oauthBtn}
-            onMouseEnter={e => e.currentTarget.style.background = '#f8f9fc'}
-            onMouseLeave={e => e.currentTarget.style.background = '#ffffff'}
+          <div className="mb-6 text-center">
+            <h1 className="text-xl font-bold text-white tracking-tight">Sign in to Echo</h1>
+            <p className="text-slate-400 text-xs mt-1">Access your secure real-time account</p>
+          </div>
+
+          {/* Google SSO */}
+          <a
+            href={GOOGLE_URL}
+            className="flex items-center justify-center gap-3 w-full py-2.5 rounded-xl border border-white/5 bg-[#14141c] hover:bg-[#1a1a26] text-slate-200 text-xs font-semibold cursor-pointer transition-all duration-200 shadow-md"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24">
+            <svg width="16" height="16" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -285,67 +144,82 @@ const Login = () => {
             Continue with Google
           </a>
 
-          <div style={S.divider}>
-            <div style={S.divLine} />
-            <span style={S.divText}>or sign in with email</span>
-            <div style={S.divLine} />
+          <div className="flex items-center gap-3 my-5">
+            <div className="flex-1 h-[1px] bg-white/5" />
+            <span className="text-[10px] text-slate-500 uppercase font-mono tracking-wider">or email</span>
+            <div className="flex-1 h-[1px] bg-white/5" />
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {/* Email */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Email field */}
             <div>
-              <label style={S.label}>Email address</label>
-              <div style={S.fieldWrap} onFocus={onFocus} onBlur={onBlur}>
-                <span style={S.fieldIcon}><MailIcon /></span>
-                <input id="login-email" type="email" placeholder="you@example.com"
-                  value={email} onChange={e => setEmail(e.target.value)}
+              <label className="block text-[10px] uppercase font-mono tracking-wider text-slate-400 mb-1.5">Email address</label>
+              <div className="flex items-center bg-[#14141c] border border-white/5 rounded-xl px-3 py-2 focus-within:border-[#7b6ef6]/40 focus-within:shadow-[0_0_15px_rgba(123,110,246,0.1)] transition-all">
+                <Mail size={15} className="text-slate-500 mr-2.5 flex-shrink-0" />
+                <input
+                  id="login-email"
+                  type="email"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
-                  style={{ ...S.fieldInput, caretColor: '#7b6ef6' }}
+                  className="flex-1 bg-transparent border-none outline-none text-xs text-white placeholder-slate-600 font-sans"
                 />
               </div>
             </div>
 
-            {/* Password */}
+            {/* Password field */}
             <div>
-              <label style={S.label}>Password</label>
-              <div style={S.fieldWrap} onFocus={onFocus} onBlur={onBlur}>
-                <span style={S.fieldIcon}><LockIcon /></span>
-                <input id="login-password" type={showPw ? 'text' : 'password'} placeholder="Your password"
-                  value={password} onChange={e => setPassword(e.target.value)}
+              <label className="block text-[10px] uppercase font-mono tracking-wider text-slate-400 mb-1.5">Password</label>
+              <div className="flex items-center bg-[#14141c] border border-white/5 rounded-xl px-3 py-2 focus-within:border-[#7b6ef6]/40 focus-within:shadow-[0_0_15px_rgba(123,110,246,0.1)] transition-all">
+                <Lock size={15} className="text-slate-500 mr-2.5 flex-shrink-0" />
+                <input
+                  id="login-password"
+                  type={showPw ? 'text' : 'password'}
+                  placeholder="Enter password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
-                  style={{ ...S.fieldInput, caretColor: '#7b6ef6' }}
+                  className="flex-1 bg-transparent border-none outline-none text-xs text-white placeholder-slate-600 font-sans"
                 />
-                <button type="button" onClick={() => setShowPw(p => !p)} style={S.eyeBtn}>
-                  {showPw ? <EyeOffIcon /> : <EyeIcon />}
+                <button
+                  type="button"
+                  onClick={() => setShowPw((p) => !p)}
+                  className="text-slate-500 hover:text-slate-300 outline-none flex items-center justify-center p-0.5"
+                >
+                  {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
             </div>
 
-            {/* Submit */}
-            <button id="login-submit" type="submit" disabled={isLoading}
-              style={{ ...S.submitBtn, opacity: isLoading ? 0.7 : 1, cursor: isLoading ? 'not-allowed' : 'pointer' }}
-              onMouseEnter={e => { if (!isLoading) e.currentTarget.style.boxShadow = '0 6px 24px rgba(123,110,246,0.55)'; }}
-              onMouseLeave={e => e.currentTarget.style.boxShadow = '0 3px 12px rgba(120,110,246,0.38)'}
+            {/* Submit Button */}
+            <button
+              id="login-submit"
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 rounded-xl border border-transparent bg-gradient-to-r from-[#7b6ef6] to-[#5956e9] text-white text-xs font-bold shadow-lg shadow-[#7b6ef6]/15 hover:shadow-[#7b6ef6]/30 active:scale-[0.99] transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6"
             >
               {isLoading ? (
                 <>
-                  <svg style={{ animation: 'spin 1s linear infinite' }} width="15" height="15" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" strokeWidth="3"/>
-                    <path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" strokeWidth="3" strokeLinecap="round"/>
+                  <svg className="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
                   Signing in...
                 </>
-              ) : 'Sign In'}
+              ) : (
+                'Sign In'
+              )}
             </button>
           </form>
 
-          <p style={S.bottomRow}>
+          {/* Bottom link */}
+          <p className="text-center text-xs text-slate-400 mt-6 select-text">
             Don't have an account?
-            <Link to="/register" style={S.link}>Create one</Link>
+            <Link to="/register" className="text-[#7b6ef6] font-bold hover:underline ml-1">Create one</Link>
           </p>
         </div>
       </div>
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 };

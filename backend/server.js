@@ -18,6 +18,7 @@ const conversationRoutes = require('./routes/conversation');
 const messageRoutes = require('./routes/message');
 const adminRoutes = require('./routes/admin');
 const livekitRoutes = require('./routes/livekit');
+const configRoutes = require('./routes/config');
 const initSocket = require('./socket/socket');
 
 const app = express();
@@ -60,6 +61,7 @@ app.use('/conversation', conversationRoutes);
 app.use('/message', messageRoutes);
 app.use('/admin', adminRoutes);
 app.use('/livekit', livekitRoutes);
+app.use('/config', configRoutes);
 
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok', app: 'ECHO Backend', timestamp: new Date() }));
