@@ -1,16 +1,23 @@
 import { useState, useRef } from 'react';
-import { Camera, Save, User, Edit3 } from 'lucide-react';
+import { Camera, Save, User, Edit3, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import axiosInstance from '../utils/axiosInstance';
 import useAuthStore from '../store/authStore';
 
 const Profile = () => {
-  const { user, updateUser } = useAuthStore();
+  const { user, updateUser, logout } = useAuthStore();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ username: user?.username || '', bio: user?.bio || '', nickname: user?.nickname || '' });
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar || '');
   const [isLoading, setIsLoading] = useState(false);
   const fileRef = useRef();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   const getAvatar = () =>
     avatarPreview || user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username}`;
@@ -158,6 +165,16 @@ const Profile = () => {
             >
               <Save size={16} />
               {isLoading ? 'Saving...' : 'Save Changes'}
+            </button>
+
+            {/* Logout button for mobile ease */}
+            <button
+              id="profile-logout-btn"
+              onClick={handleLogout}
+              className="w-full mt-4 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-400 text-xs font-bold transition-all cursor-pointer"
+            >
+              <LogOut size={16} />
+              Log Out
             </button>
           </div>
         </div>
