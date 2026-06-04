@@ -165,6 +165,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [scale, setScale] = useState(1);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
   const { login, isLoading } = useAuthStore();
   const navigate = useNavigate();
 
@@ -172,6 +173,7 @@ const Login = () => {
     const update = () => {
       const vh = window.innerHeight;
       const vw = window.innerWidth;
+      setIsMobile(vw < 640);
       const scaleH = (vh - 32) / CARD_BASE_H;
       const scaleW = (vw - 32) / 620;
       setScale(Math.min(1, scaleH, scaleW));
@@ -193,12 +195,38 @@ const Login = () => {
     }
   };
 
+  const cardStyle = isMobile ? {
+    width: '100%',
+    height: '100vh',
+    maxHeight: '100vh',
+    borderRadius: '0',
+    overflowY: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+    boxShadow: 'none',
+  } : S.card;
+
+  const leftPanelStyle = isMobile ? {
+    display: 'none',
+  } : S.left;
+
+  const rightPanelStyle = isMobile ? {
+    flex: 1,
+    background: '#ffffff',
+    padding: '24px 20px',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    minHeight: '100%',
+    boxSizing: 'border-box',
+  } : S.right;
+
   return (
     <div style={S.page}>
-      <div style={{ ...S.card, transform: `scale(${scale})` }}>
+      <div style={isMobile ? cardStyle : { ...cardStyle, transform: `scale(${scale})` }}>
 
         {/* ══ LEFT PANEL ══ */}
-        <div style={S.left}>
+        <div style={leftPanelStyle}>
           {/* sparkle dots */}
           {[[8,14],[18,70],[28,42],[38,88],[52,18],[62,60],[72,30],[82,80]].map(([t,l],i) => (
             <div key={i} style={{ position:'absolute', borderRadius:'50%', background:'rgba(255,255,255,0.45)', width: i%3===0?'3px':'2px', height: i%3===0?'3px':'2px', top:t+'%', left:l+'%' }} />
@@ -239,7 +267,7 @@ const Login = () => {
         </div>
 
         {/* ══ RIGHT PANEL ══ */}
-        <div style={S.right}>
+        <div style={rightPanelStyle}>
           <h1 style={S.title}>Sign in to Echo</h1>
           <p style={S.subtitle}>Enter your credentials to access your account</p>
 

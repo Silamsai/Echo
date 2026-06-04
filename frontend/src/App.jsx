@@ -1,7 +1,8 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useEffect } from 'react';
 import useAuthStore from './store/authStore';
+import { ArrowLeft } from 'lucide-react';
 
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -17,12 +18,39 @@ import Sidebar from './components/Sidebar';
 
 const AppLayout = ({ page: Page }) => {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   if (!user) return <Navigate to="/login" replace />;
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar onSelectConversation={() => {}} activeConversation={null} />
+    <div className="flex h-screen overflow-hidden bg-[#0a0a0f]">
+      {/* Sidebar hidden on mobile, visible on desktop */}
+      <div className="hidden md:flex flex-shrink-0 h-full">
+        <Sidebar onSelectConversation={() => {}} activeConversation={null} />
+      </div>
+      
+      {/* Content area */}
       <div className="flex-1 overflow-hidden flex flex-col">
+        {/* Mobile top header with back button */}
+        <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-white/5 bg-[#111118] flex-shrink-0">
+          <button
+            onClick={() => navigate('/')}
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+            title="Back to Chats"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div className="text-[18px] font-black tracking-tight" style={{
+            background: 'linear-gradient(90deg, #7b6ef6, #6eb5ff)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            fontFamily: '"Inter", -apple-system, sans-serif'
+          }}>
+            echo
+          </div>
+          <div className="w-8" /> {/* Spacer to center the logo */}
+        </div>
+        
         <Page />
       </div>
     </div>

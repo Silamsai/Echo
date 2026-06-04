@@ -247,12 +247,14 @@ const Register = () => {
   const [showCPw, setShowCPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [scale, setScale] = useState(1);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
   const navigate = useNavigate();
 
   useEffect(() => {
     const update = () => {
       const vh = window.innerHeight;
       const vw = window.innerWidth;
+      setIsMobile(vw < 640);
       const maxH = vh - 32; // 16px top+bottom padding
       const maxW = vw - 32;
       const scaleH = maxH / CARD_BASE_H;
@@ -292,12 +294,38 @@ const Register = () => {
     }
   };
 
+  const cardStyle = isMobile ? {
+    width: '100%',
+    height: '100vh',
+    maxHeight: '100vh',
+    borderRadius: '0',
+    overflowY: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+    boxShadow: 'none',
+  } : S.card;
+
+  const leftPanelStyle = isMobile ? {
+    display: 'none',
+  } : S.left;
+
+  const rightPanelStyle = isMobile ? {
+    flex: 1,
+    background: '#ffffff',
+    padding: '24px 20px',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    minHeight: '100%',
+    boxSizing: 'border-box',
+  } : S.right;
+
   return (
     <div style={S.page}>
-      <div style={{ ...S.card, transform: `scale(${scale})` }}>
+      <div style={isMobile ? cardStyle : { ...cardStyle, transform: `scale(${scale})` }}>
 
         {/* ════════ LEFT PANEL ════════ */}
-        <div style={S.left}>
+        <div style={leftPanelStyle}>
           {/* Sparkle dots */}
           {[
             [8,14],[18,70],[28,42],[38,88],[52,18],[62,60],[72,30],[82,80],
@@ -343,7 +371,7 @@ const Register = () => {
         </div>
 
         {/* ════════ RIGHT PANEL ════════ */}
-        <div style={S.right}>
+        <div style={rightPanelStyle}>
           <h1 style={S.title}>Create your account</h1>
           <p style={S.subtitle}>Let's get started with your new Echo account</p>
 
