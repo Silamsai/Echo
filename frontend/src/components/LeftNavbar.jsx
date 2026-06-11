@@ -36,12 +36,12 @@ const NavButton = ({ item, isActive, onClick }) => {
         justifyContent: 'center',
         cursor: 'pointer',
         border: isActive
-          ? '1px solid rgba(123,110,246,0.35)'
+          ? '1px solid var(--accent-border)'
           : '1px solid transparent',
         background: isActive
-          ? 'linear-gradient(135deg, rgba(123,110,246,0.18) 0%, rgba(89,86,233,0.12) 100%)'
+          ? 'linear-gradient(135deg, var(--accent-glow) 0%, rgba(89,86,233,0.06) 100%)'
           : 'transparent',
-        color: isActive ? '#a78bfa' : 'rgba(255,255,255,0.35)',
+        color: isActive ? 'var(--accent)' : 'var(--ln-btn-color)',
         transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
         boxShadow: isActive ? '0 0 20px rgba(123,110,246,0.2), inset 0 1px 0 rgba(255,255,255,0.1)' : 'none',
         fontFamily: 'inherit',
@@ -71,10 +71,10 @@ const NavButton = ({ item, isActive, onClick }) => {
         left: 'calc(100% + 12px)',
         top: '50%',
         transform: 'translateY(-50%)',
-        background: 'rgba(15,15,22,0.95)',
+        background: 'var(--ln-tooltip-bg)',
         backdropFilter: 'blur(12px)',
-        border: '1px solid rgba(255,255,255,0.1)',
-        color: 'rgba(255,255,255,0.85)',
+        border: '1px solid var(--ln-tooltip-border)',
+        color: 'var(--ln-tooltip-color)',
         fontSize: '11px',
         fontWeight: 600,
         padding: '5px 10px',
@@ -122,10 +122,34 @@ const LeftNavbar = () => {
   return (
     <>
       <style>{`
+        :root {
+          --ln-bg: rgba(11, 11, 19, 0.82);
+          --ln-border: rgba(255, 255, 255, 0.06);
+          --ln-btn-color: rgba(255, 255, 255, 0.35);
+          --ln-btn-hover-bg: rgba(255, 255, 255, 0.05);
+          --ln-btn-hover-color: rgba(255, 255, 255, 0.7);
+          --ln-btn-hover-border: rgba(255, 255, 255, 0.1);
+          --ln-tooltip-bg: rgba(15, 15, 22, 0.95);
+          --ln-tooltip-border: rgba(255, 255, 255, 0.1);
+          --ln-tooltip-color: rgba(255, 255, 255, 0.85);
+          --ln-avatar-border: rgba(255, 255, 255, 0.1);
+        }
+        :root.light {
+          --ln-bg: rgba(255, 255, 255, 0.82);
+          --ln-border: rgba(0, 0, 0, 0.06);
+          --ln-btn-color: rgba(30, 27, 58, 0.4);
+          --ln-btn-hover-bg: rgba(0, 0, 0, 0.04);
+          --ln-btn-hover-color: rgba(30, 27, 58, 0.75);
+          --ln-btn-hover-border: rgba(0, 0, 0, 0.08);
+          --ln-tooltip-bg: rgba(255, 255, 255, 0.95);
+          --ln-tooltip-border: rgba(0, 0, 0, 0.08);
+          --ln-tooltip-color: rgba(30, 27, 58, 0.85);
+          --ln-avatar-border: rgba(0, 0, 0, 0.08);
+        }
         .ln-nav-btn:hover {
-          background: rgba(255,255,255,0.06) !important;
-          color: rgba(255,255,255,0.7) !important;
-          border-color: rgba(255,255,255,0.1) !important;
+          background: var(--ln-btn-hover-bg) !important;
+          color: var(--ln-btn-hover-color) !important;
+          border-color: var(--ln-btn-hover-border) !important;
           transform: translateY(-1px);
         }
         .ln-nav-btn:hover .ln-tooltip {
@@ -135,15 +159,15 @@ const LeftNavbar = () => {
           transform: scale(0.93) !important;
         }
         .ln-avatar-wrap:hover {
-          border-color: rgba(123,110,246,0.5) !important;
+          border-color: var(--accent) !important;
           transform: translateY(-1px);
-          box-shadow: 0 4px 16px rgba(123,110,246,0.25) !important;
+          box-shadow: 0 4px 16px var(--accent-glow) !important;
         }
         .ln-logout-btn:hover {
           color: #f87171 !important;
           background: rgba(248,113,113,0.08) !important;
         }
-        .ln-mob-btn:hover { color: rgba(255,255,255,0.7) !important; }
+        .ln-mob-btn:hover { color: var(--ln-btn-hover-color) !important; }
       `}</style>
 
       {/* ─── DESKTOP RAIL ─── */}
@@ -155,10 +179,10 @@ const LeftNavbar = () => {
         padding: '20px 0',
         width: '72px',
         height: '100%',
-        background: 'rgba(8,8,14,0.92)',
+        background: 'var(--ln-bg)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        borderRight: '1px solid rgba(255,255,255,0.06)',
+        borderRight: '1px solid var(--ln-border)',
         flexShrink: 0,
         userSelect: 'none',
         position: 'relative',
@@ -213,7 +237,7 @@ const LeftNavbar = () => {
             style={{
               width: '36px', height: '36px', borderRadius: '11px',
               overflow: 'hidden',
-              border: '1.5px solid rgba(255,255,255,0.1)',
+              border: '1.5px solid var(--ln-avatar-border)',
               cursor: 'pointer',
               transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
               boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
@@ -232,7 +256,7 @@ const LeftNavbar = () => {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               border: '1px solid transparent',
               background: 'transparent',
-              color: 'rgba(255,255,255,0.25)',
+              color: 'var(--ln-btn-color)',
               cursor: 'pointer',
               transition: 'all 0.2s',
               fontFamily: 'inherit',
@@ -249,10 +273,10 @@ const LeftNavbar = () => {
           position: 'fixed',
           bottom: 0, left: 0, right: 0,
           height: '64px',
-          background: 'rgba(8,8,14,0.96)',
+          background: 'var(--ln-bg)',
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
+          borderTop: '1px solid var(--ln-border)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-around',
@@ -275,9 +299,9 @@ const LeftNavbar = () => {
                   width: '48px', height: '48px',
                   borderRadius: '14px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: isActive ? 'rgba(123,110,246,0.12)' : 'transparent',
-                  border: isActive ? '1px solid rgba(123,110,246,0.25)' : '1px solid transparent',
-                  color: isActive ? '#a78bfa' : 'rgba(255,255,255,0.35)',
+                  background: isActive ? 'var(--accent-glow)' : 'transparent',
+                  border: isActive ? '1px solid var(--accent-border)' : '1px solid transparent',
+                  color: isActive ? 'var(--accent)' : 'var(--ln-btn-color)',
                   cursor: 'pointer',
                   transition: 'all 0.15s',
                   fontFamily: 'inherit',

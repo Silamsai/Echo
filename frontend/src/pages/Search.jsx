@@ -46,7 +46,7 @@ const Search = () => {
     <div className="flex-1 overflow-y-auto p-6">
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-white mb-1">Find People</h1>
+          <h1 className="text-2xl font-bold text-pri mb-1">Find People</h1>
           <p className="text-slate-400 text-sm">Search for users to connect with</p>
         </div>
 
@@ -84,7 +84,7 @@ const Search = () => {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-white">@{u.username}</p>
+                <p className="font-semibold text-pri">@{u.username}</p>
                 {u.bio && <p className="text-slate-400 text-sm truncate">{u.bio}</p>}
                 {!u.bio && (
                   <p className="text-slate-500 text-sm">

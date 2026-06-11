@@ -55,7 +55,7 @@ const Profile = () => {
   return (
     <div className="flex-1 overflow-y-auto p-6">
       <div className="max-w-lg mx-auto">
-        <h1 className="text-2xl font-bold text-white mb-8">Your Profile</h1>
+        <h1 className="text-2xl font-bold text-pri mb-8">Your Profile</h1>
 
         <div className="glass rounded-2xl p-8">
           {/* Avatar */}

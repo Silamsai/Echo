@@ -272,8 +272,8 @@ const ChatWindow = ({ conversation, onBack }) => {
   const iconBtn = (active = false) =>
     `w-8 h-8 rounded-lg flex items-center justify-center border transition-all duration-150 cursor-pointer ${
       active
-        ? 'border-[#7c6dfa]/30 bg-[#7c6dfa]/10 text-white'
-        : 'border-transparent text-slate-500 hover:text-slate-300 hover:bg-white/5'
+        ? 'border-[#7c6dfa]/30 bg-[#7c6dfa]/10 text-[#7c6dfa] dark:text-white'
+        : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-black/5 dark:hover:bg-white/5'
     }`;
 
   return (

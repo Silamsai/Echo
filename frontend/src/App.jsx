@@ -51,7 +51,7 @@ const App = () => {
     initialize();
     fetchConfig(); // Load branding & features config
     
-    // Initialize theme – apply light class when needed
+    // Initialize theme — apply light/dark class correctly
     const theme = localStorage.getItem('theme') || 'dark';
     const chatTheme = localStorage.getItem('chatTheme') || 'midnight';
     if (theme === 'light') {

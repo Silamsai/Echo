@@ -1,7 +1,68 @@
 /* ─────────────────────────────────────────────────────────── */
-/* Chat Illustration — Apple Liquid Glass Style               */
+/* Chat Illustration — Apple Liquid Glass — Theme-aware       */
 /* ─────────────────────────────────────────────────────────── */
 
+/* ── Theme tokens ── */
+.ci-root {
+  --ci-bg-from:        #06060e;
+  --ci-bg-via:         #0a0a16;
+  --ci-bg-to:          #080812;
+  --ci-mesh-color:     rgba(255,255,255,0.018);
+  --ci-card-bg:        rgba(255,255,255,0.04);
+  --ci-card-border:    rgba(255,255,255,0.1);
+  --ci-card-shadow:    0 40px 80px rgba(0,0,0,0.65);
+  --ci-card-hi:        rgba(255,255,255,0.12);
+  --ci-bubble-s-bg:    linear-gradient(135deg, rgba(123,110,246,0.75), rgba(89,86,233,0.85));
+  --ci-bubble-s-color: rgba(255,255,255,0.95);
+  --ci-bubble-r-bg:    rgba(255,255,255,0.07);
+  --ci-bubble-r-color: rgba(255,255,255,0.7);
+  --ci-bubble-r-bdr:   rgba(255,255,255,0.1);
+  --ci-brand-g-from:   #c4b5fd;
+  --ci-brand-g-mid:    #7b6ef6;
+  --ci-brand-g-to:     #6eb5ff;
+  --ci-tagline:        rgba(255,255,255,0.88);
+  --ci-subtitle:       rgba(255,255,255,0.35);
+  --ci-pill-bg:        rgba(255,255,255,0.05);
+  --ci-pill-border:    rgba(255,255,255,0.09);
+  --ci-pill-color:     rgba(255,255,255,0.45);
+  --ci-sep-line:       rgba(255,255,255,0.07);
+  --ci-sep-text:       rgba(255,255,255,0.18);
+  --ci-ring-border:    rgba(123,110,246,0.22);
+  --ci-logo-bg:        linear-gradient(135deg, rgba(123,110,246,0.2), rgba(110,181,255,0.1));
+  --ci-logo-border:    rgba(123,110,246,0.3);
+}
+
+/* ── Light mode overrides ── */
+:root.light .ci-root {
+  --ci-bg-from:        #f0f2fc;
+  --ci-bg-via:         #eaecf8;
+  --ci-bg-to:          #eef0fa;
+  --ci-mesh-color:     rgba(80,80,120,0.05);
+  --ci-card-bg:        rgba(255,255,255,0.75);
+  --ci-card-border:    rgba(0,0,0,0.08);
+  --ci-card-shadow:    0 24px 60px rgba(0,0,0,0.12);
+  --ci-card-hi:        rgba(255,255,255,0.9);
+  --ci-bubble-s-bg:    linear-gradient(135deg, #7b6ef6, #5956e9);
+  --ci-bubble-s-color: #ffffff;
+  --ci-bubble-r-bg:    rgba(255,255,255,0.85);
+  --ci-bubble-r-color: rgba(30,27,58,0.7);
+  --ci-bubble-r-bdr:   rgba(0,0,0,0.09);
+  --ci-brand-g-from:   #7b6ef6;
+  --ci-brand-g-mid:    #5956e9;
+  --ci-brand-g-to:     #3b82f6;
+  --ci-tagline:        #1e1b3a;
+  --ci-subtitle:       rgba(30,27,58,0.45);
+  --ci-pill-bg:        rgba(0,0,0,0.04);
+  --ci-pill-border:    rgba(0,0,0,0.08);
+  --ci-pill-color:     rgba(30,27,58,0.5);
+  --ci-sep-line:       rgba(0,0,0,0.07);
+  --ci-sep-text:       rgba(0,0,0,0.22);
+  --ci-ring-border:    rgba(123,110,246,0.25);
+  --ci-logo-bg:        linear-gradient(135deg, rgba(123,110,246,0.15), rgba(59,130,246,0.08));
+  --ci-logo-border:    rgba(123,110,246,0.25);
+}
+
+/* ── Root container ── */
 .ci-root {
   width: 100%;
   height: 100%;
@@ -10,8 +71,9 @@
   justify-content: center;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(160deg, #06060e 0%, #0a0a16 50%, #080812 100%);
+  background: linear-gradient(160deg, var(--ci-bg-from) 0%, var(--ci-bg-via) 50%, var(--ci-bg-to) 100%);
   contain: layout style;
+  transition: background 0.35s ease;
 }
 
 /* ── Ambient glows ── */
@@ -40,17 +102,22 @@
   bottom: 15%; left: 8%;
   animation: ciOrb3 12s ease-in-out infinite;
 }
+/* Light mode: softer glows */
+:root.light .ci-glow-1 { background: radial-gradient(circle, rgba(123,110,246,0.08) 0%, transparent 65%); }
+:root.light .ci-glow-2 { background: radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 65%); }
+:root.light .ci-glow-3 { background: radial-gradient(circle, rgba(167,139,250,0.07) 0%, transparent 65%); }
 
 /* ── Grid mesh ── */
 .ci-mesh {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    linear-gradient(var(--ci-mesh-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ci-mesh-color) 1px, transparent 1px);
   background-size: 60px 60px;
   mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
   pointer-events: none;
+  transition: background-image 0.35s ease;
 }
 
 /* ── Floating chat bubbles ── */
@@ -58,30 +125,34 @@
   position: absolute;
   padding: 9px 14px;
   border-radius: 20px;
-  font-size: 11.5px;
-  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 12px;
+  font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
   font-weight: 500;
   white-space: nowrap;
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
   animation-delay: 0s;
   will-change: transform;
+  line-height: 1.4;
 }
 .ci-bubble-sent {
-  background: linear-gradient(135deg, rgba(123,110,246,0.7), rgba(89,86,233,0.8));
-  color: rgba(255,255,255,0.95);
+  background: var(--ci-bubble-s-bg);
+  color: var(--ci-bubble-s-color);
   border-radius: 18px 18px 6px 18px;
-  border: 1px solid rgba(167,139,250,0.3);
-  box-shadow: 0 8px 32px rgba(123,110,246,0.25), inset 0 1px 0 rgba(255,255,255,0.15);
+  border: 1px solid rgba(167,139,250,0.25);
+  box-shadow: 0 8px 32px rgba(123,110,246,0.22), inset 0 1px 0 rgba(255,255,255,0.18);
   backdrop-filter: blur(12px);
 }
 .ci-bubble-recv {
-  background: rgba(255,255,255,0.07);
-  color: rgba(255,255,255,0.7);
+  background: var(--ci-bubble-r-bg);
+  color: var(--ci-bubble-r-color);
   border-radius: 18px 18px 18px 6px;
-  border: 1px solid rgba(255,255,255,0.1);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+  border: 1px solid var(--ci-bubble-r-bdr);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.1);
   backdrop-filter: blur(12px);
+}
+:root.light .ci-bubble-recv {
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9);
 }
 
 /* ── Central glass card ── */
@@ -92,30 +163,27 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 44px 40px 36px;
-  background: rgba(255,255,255,0.04);
+  padding: 40px 36px 32px;
+  background: var(--ci-card-bg);
   backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 32px;
-  box-shadow:
-    0 40px 80px rgba(0,0,0,0.6),
-    inset 0 1px 0 rgba(255,255,255,0.12),
-    inset 0 -1px 0 rgba(0,0,0,0.2);
-  max-width: 380px;
+  border: 1px solid var(--ci-card-border);
+  border-radius: 28px;
+  box-shadow: var(--ci-card-shadow), inset 0 1px 0 var(--ci-card-hi), inset 0 -1px 0 rgba(0,0,0,0.08);
+  max-width: 360px;
   width: 90%;
   animation: ciCardReveal 0.7s cubic-bezier(0.16,1,0.3,1) forwards;
+  transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
 }
 
 /* ── Logo wrap ── */
 .ci-logo-wrap {
   position: relative;
-  width: 100px;
-  height: 100px;
+  width: 96px; height: 96px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 22px;
+  margin-bottom: 20px;
 }
 .ci-logo-ring {
   position: absolute;
@@ -124,74 +192,78 @@
   pointer-events: none;
 }
 .ci-logo-ring-outer {
-  border: 1px solid rgba(123,110,246,0.2);
+  border: 1px solid var(--ci-ring-border);
   animation: ciRingPulse 4s ease-in-out infinite;
 }
 .ci-logo-ring-inner {
   inset: 10px;
-  background: radial-gradient(circle, rgba(123,110,246,0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(123,110,246,0.1) 0%, transparent 70%);
   animation: ciRingPulse 4s ease-in-out infinite 0.5s;
 }
 .ci-logo-container {
-  width: 80px; height: 80px;
+  width: 76px; height: 76px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(123,110,246,0.18), rgba(110,181,255,0.1));
-  border: 1.5px solid rgba(123,110,246,0.3);
+  background: var(--ci-logo-bg);
+  border: 1.5px solid var(--ci-logo-border);
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 0 40px rgba(123,110,246,0.2), inset 0 1px 0 rgba(255,255,255,0.2);
+  box-shadow: 0 0 32px rgba(123,110,246,0.18), inset 0 1px 0 rgba(255,255,255,0.2);
   position: relative;
   z-index: 2;
+  transition: background 0.35s ease;
 }
 
 /* ── Typography ── */
 .ci-brand {
-  font-size: 38px;
+  font-size: 36px;
   font-weight: 900;
   letter-spacing: -2px;
   line-height: 1;
-  margin-bottom: 10px;
-  background: linear-gradient(120deg, #c4b5fd 0%, #7b6ef6 40%, #6eb5ff 100%);
+  margin-bottom: 8px;
+  background: linear-gradient(120deg, var(--ci-brand-g-from) 0%, var(--ci-brand-g-mid) 40%, var(--ci-brand-g-to) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  font-family: "Plus Jakarta Sans", sans-serif;
+  font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
 }
 .ci-tagline {
-  color: rgba(255,255,255,0.85);
-  font-size: 17px;
+  color: var(--ci-tagline);
+  font-size: 16px;
   font-weight: 700;
-  font-family: "Plus Jakarta Sans", sans-serif;
-  letter-spacing: -0.3px;
+  font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
+  letter-spacing: -0.2px;
   margin: 0 0 6px;
+  transition: color 0.35s ease;
 }
 .ci-subtitle {
-  color: rgba(255,255,255,0.3);
+  color: var(--ci-subtitle);
   font-size: 12.5px;
-  font-family: "Plus Jakarta Sans", sans-serif;
-  line-height: 1.65;
-  max-width: 250px;
-  margin: 0 0 24px;
+  font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
+  font-weight: 450;
+  line-height: 1.6;
+  max-width: 240px;
+  margin: 0 0 22px;
+  transition: color 0.35s ease;
 }
 
 /* ── Feature pills ── */
 .ci-pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
+  gap: 6px;
   justify-content: center;
-  margin-bottom: 24px;
+  margin-bottom: 22px;
 }
 .ci-pill {
   display: flex;
   align-items: center;
   gap: 5px;
   padding: 5px 11px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.09);
+  background: var(--ci-pill-bg);
+  border: 1px solid var(--ci-pill-border);
   border-radius: 99px;
-  font-size: 10.5px;
-  color: rgba(255,255,255,0.45);
-  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 11px;
+  color: var(--ci-pill-color);
+  font-family: "Plus Jakarta Sans", -apple-system, sans-serif;
   font-weight: 500;
   backdrop-filter: blur(8px);
   transition: all 0.2s;
@@ -200,9 +272,9 @@
   cursor: default;
 }
 .ci-pill:hover {
-  background: rgba(123,110,246,0.12);
+  background: rgba(123,110,246,0.1);
   border-color: rgba(123,110,246,0.25);
-  color: rgba(196,181,253,0.8);
+  color: #a78bfa;
 }
 .ci-pill-icon { font-size: 12px; }
 
@@ -216,15 +288,17 @@
 .ci-sep-line {
   flex: 1;
   height: 1px;
-  background: rgba(255,255,255,0.06);
+  background: var(--ci-sep-line);
+  transition: background 0.35s ease;
 }
 .ci-sep-text {
   font-size: 8.5px;
-  color: rgba(255,255,255,0.18);
-  font-family: monospace;
-  letter-spacing: 1.5px;
+  color: var(--ci-sep-text);
+  font-family: "JetBrains Mono", monospace;
+  letter-spacing: 1.2px;
   text-transform: uppercase;
   white-space: nowrap;
+  transition: color 0.35s ease;
 }
 
 /* ─────────────────────────────────────────────────────────── */
@@ -263,7 +337,7 @@
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 @keyframes ciRingPulse {
-  0%, 100% { opacity: 0.6; transform: scale(1); }
+  0%, 100% { opacity: 0.5; transform: scale(1); }
   50%       { opacity: 1; transform: scale(1.06); }
 }
 @keyframes ciPillIn {

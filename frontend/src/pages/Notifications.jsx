@@ -67,7 +67,7 @@ const Notifications = () => {
             <Bell size={20} className="text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">Echo Requests</h1>
+            <h1 className="text-2xl font-bold text-pri">Echo Requests</h1>
             <p className="text-slate-400 text-sm">{echoRequests.length} pending</p>
           </div>
         </div>
@@ -88,7 +88,7 @@ const Notifications = () => {
                   className="w-12 h-12 rounded-full object-cover flex-shrink-0"
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-white">@{req.sender?.username}</p>
+                  <p className="font-semibold text-pri">@{req.sender?.username}</p>
                   {req.sender?.bio && (
                     <p className="text-slate-400 text-sm truncate">{req.sender.bio}</p>
                   )}

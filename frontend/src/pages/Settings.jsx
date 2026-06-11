@@ -68,14 +68,16 @@ const Settings = () => {
     return val === null ? true : val === 'true';
   });
 
-  // Handle theme changes
+  // Handle theme changes — toggles both 'light' and 'dark' classes
   const handleThemeChange = (newTheme) => {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
+    if (newTheme === 'light') {
+      document.documentElement.classList.add('light');
       document.documentElement.classList.remove('dark');
+    } else {
+      document.documentElement.classList.remove('light');
+      document.documentElement.classList.add('dark');
     }
     toast.success(`${newTheme.charAt(0).toUpperCase() + newTheme.slice(1)} theme enabled`);
   };
@@ -97,28 +99,28 @@ const Settings = () => {
     user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username}`;
 
   return (
-    <div className="flex-grow flex flex-col h-full bg-[#0a0a0f] text-[#e8e6ff] font-sans select-none overflow-hidden fade-in">
+    <div className="flex-grow flex flex-col h-full bg-app text-pri font-sans select-none overflow-hidden fade-in">
       
       {/* Header bar */}
-      <div className="px-6 py-5 border-b border-white/5 bg-[#0b0b13] flex items-center justify-between flex-shrink-0">
+      <div className="px-6 py-5 border-b border-pri bg-navbar flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2.5">
           <SettingsIcon size={18} className="text-[#7c6dfa]" />
           <h1 className="text-sm font-extrabold tracking-tight uppercase font-mono">System Preferences</h1>
         </div>
-        <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">v1.2.0</span>
+        <span className="text-[10px] font-mono text-mute uppercase tracking-widest">v1.2.0</span>
       </div>
 
       {/* Main content body split layout */}
       <div className="flex-1 flex overflow-hidden">
         
         {/* Left Column: Vertical macOS System Preferences Sidebar */}
-        <div className="w-[180px] md:w-[220px] border-r border-white/5 bg-[#0a0a0f] py-4 px-2 space-y-1.5 flex-shrink-0 overflow-y-auto">
+        <div className="w-[180px] md:w-[220px] border-r border-pri bg-app py-4 px-2 space-y-1.5 flex-shrink-0 overflow-y-auto">
           <button
             onClick={() => setActiveTab('general')}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'general'
-                ? 'bg-white/5 text-white border border-white/10 shadow-inner'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                ? 'bg-hover text-pri border border-pri shadow-inner'
+                : 'text-mute hover:text-pri hover:bg-hover'
             }`}
           >
             <Sun size={14} className={activeTab === 'general' ? 'text-[#7c6dfa]' : 'text-slate-500'} />
@@ -129,8 +131,8 @@ const Settings = () => {
             onClick={() => setActiveTab('notifications')}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'notifications'
-                ? 'bg-white/5 text-white border border-white/10 shadow-inner'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                ? 'bg-hover text-pri border border-pri shadow-inner'
+                : 'text-mute hover:text-pri hover:bg-hover'
             }`}
           >
             <Bell size={14} className={activeTab === 'notifications' ? 'text-[#fa6d9b]' : 'text-slate-500'} />
@@ -141,8 +143,8 @@ const Settings = () => {
             onClick={() => setActiveTab('account')}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'account'
-                ? 'bg-white/5 text-white border border-white/10 shadow-inner'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                ? 'bg-hover text-pri border border-pri shadow-inner'
+                : 'text-mute hover:text-pri hover:bg-hover'
             }`}
           >
             <Shield size={14} className={activeTab === 'account' ? 'text-green-400' : 'text-slate-500'} />
@@ -151,14 +153,14 @@ const Settings = () => {
         </div>
 
         {/* Right Column: Active Configuration Form */}
-        <div className="flex-grow p-6 md:p-8 bg-[#111118] overflow-y-auto">
+        <div className="flex-grow p-6 md:p-8 bg-surface overflow-y-auto">
           <div className="max-w-[520px] space-y-6">
 
             {/* ──────── TABS ──────── */}
             {activeTab === 'general' && (
               <div className="space-y-6 animate-slide-in-right">
                 <div>
-                  <h2 className="text-base font-extrabold text-white mb-1">Theme Preferences</h2>
+                  <h2 className="text-base font-extrabold text-pri mb-1">Theme Preferences</h2>
                   <p className="text-slate-500 text-[11px] leading-normal font-mono max-w-sm">Choose the window appearance of your Echo messaging workspace.</p>
                 </div>
 
@@ -169,10 +171,10 @@ const Settings = () => {
                     className={`flex flex-col gap-3 p-4 rounded-xl text-left border cursor-pointer transition-all duration-150 relative ${
                       theme === 'dark'
                         ? 'border-[#7c6dfa] bg-[#7c6dfa]/5 shadow-lg shadow-indigo-500/5'
-                        : 'border-white/5 bg-[#16161f] hover:border-white/10'
+                        : 'border-pri bg-panel hover:border-accent-border'
                     }`}
                   >
-                    <div className="w-full h-20 rounded-lg bg-[#0a0a0f] border border-white/5 p-2 flex flex-col justify-between overflow-hidden">
+                    <div className="w-full h-20 rounded-lg bg-app border border-pri p-2 flex flex-col justify-between overflow-hidden">
                       <div className="flex justify-between items-center">
                         <span className="w-1.5 h-1.5 rounded-full bg-red-400/80" />
                         <span className="w-8 h-2 rounded bg-white/10" />
@@ -183,7 +185,7 @@ const Settings = () => {
                       </div>
                     </div>
                     <div className="flex items-center justify-between w-full">
-                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <span className={`text-xs font-bold flex items-center gap-1.5 ${theme === 'dark' ? 'text-pri' : 'text-sec'}`}>
                         <Moon size={12} className="text-[#7c6dfa]" /> Dark Mode
                       </span>
                       {theme === 'dark' && (
@@ -198,7 +200,7 @@ const Settings = () => {
                     className={`flex flex-col gap-3 p-4 rounded-xl text-left border cursor-pointer transition-all duration-150 relative ${
                       theme === 'light'
                         ? 'border-[#7c6dfa] bg-[#7c6dfa]/5 shadow-lg shadow-indigo-500/5'
-                        : 'border-white/5 bg-[#16161f] hover:border-white/10'
+                        : 'border-pri bg-panel hover:border-accent-border'
                     }`}
                   >
                     <div className="w-full h-20 rounded-lg bg-slate-100 border border-slate-200 p-2 flex flex-col justify-between overflow-hidden">
@@ -212,7 +214,7 @@ const Settings = () => {
                       </div>
                     </div>
                     <div className="flex items-center justify-between w-full">
-                      <span className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
+                      <span className={`text-xs font-bold flex items-center gap-1.5 ${theme === 'light' ? 'text-pri' : 'text-sec'}`}>
                         <Sun size={12} className="text-yellow-500" /> Light Mode
                       </span>
                       {theme === 'light' && (
@@ -227,17 +229,17 @@ const Settings = () => {
             {activeTab === 'notifications' && (
               <div className="space-y-6 animate-slide-in-right">
                 <div>
-                  <h2 className="text-base font-extrabold text-white mb-1">Notification Options</h2>
+                  <h2 className="text-base font-extrabold text-pri mb-1">Notification Options</h2>
                   <p className="text-slate-500 text-[11px] leading-normal font-mono max-w-sm">Configure how incoming signals, requests, and updates alert your device.</p>
                 </div>
 
-                <div className="divide-y divide-white/5 border border-white/5 rounded-xl bg-[#16161f] overflow-hidden">
+                <div className="divide-y divide-[var(--border-primary)] border border-pri rounded-xl bg-panel overflow-hidden">
                   {/* Desktop Notifs */}
                   <div className="flex items-center justify-between p-4">
                     <div className="flex items-start gap-3.5 max-w-[80%]">
                       <Monitor className="text-[#7c6dfa] flex-shrink-0 mt-0.5" size={16} />
                       <div>
-                        <p className="text-xs font-bold text-white">Desktop Banner Alerts</p>
+                        <p className="text-xs font-bold text-pri">Desktop Banner Alerts</p>
                         <p className="text-[10px] text-slate-500 leading-relaxed font-mono mt-0.5">Show native OS push notification banners when messages arrive in background.</p>
                       </div>
                     </div>
@@ -245,7 +247,7 @@ const Settings = () => {
                       type="button"
                       onClick={() => setDesktopNotif(!desktopNotif)}
                       className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors flex-shrink-0 cursor-pointer ${
-                        desktopNotif ? 'bg-[#7c6dfa]' : 'bg-white/10'
+                        desktopNotif ? 'bg-[#7c6dfa]' : 'bg-slate-300 dark:bg-white/10'
                       }`}
                     >
                       <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
@@ -259,7 +261,7 @@ const Settings = () => {
                     <div className="flex items-start gap-3.5 max-w-[80%]">
                       <Volume2 className="text-[#fa6d9b] flex-shrink-0 mt-0.5" size={16} />
                       <div>
-                        <p className="text-xs font-bold text-white">Sound Effects</p>
+                        <p className="text-xs font-bold text-pri">Sound Effects</p>
                         <p className="text-[10px] text-slate-500 leading-relaxed font-mono mt-0.5">Play audio echoes on incoming messages, sent triggers, and request alerts.</p>
                       </div>
                     </div>
@@ -267,7 +269,7 @@ const Settings = () => {
                       type="button"
                       onClick={() => setSoundEnabled(!soundEnabled)}
                       className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors flex-shrink-0 cursor-pointer ${
-                        soundEnabled ? 'bg-[#7c6dfa]' : 'bg-white/10'
+                        soundEnabled ? 'bg-[#7c6dfa]' : 'bg-slate-300 dark:bg-white/10'
                       }`}
                     >
                       <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
@@ -281,7 +283,7 @@ const Settings = () => {
                     <div className="flex items-start gap-3.5 max-w-[80%]">
                       <Eye className="text-green-400 flex-shrink-0 mt-0.5" size={16} />
                       <div>
-                        <p className="text-xs font-bold text-white">Share Typing Presence</p>
+                        <p className="text-xs font-bold text-pri">Share Typing Presence</p>
                         <p className="text-[10px] text-slate-500 leading-relaxed font-mono mt-0.5">Broadcast active typing states to other members in channels during conversation.</p>
                       </div>
                     </div>
@@ -289,7 +291,7 @@ const Settings = () => {
                       type="button"
                       onClick={() => setShowTyping(!showTyping)}
                       className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors flex-shrink-0 cursor-pointer ${
-                        showTyping ? 'bg-[#7c6dfa]' : 'bg-white/10'
+                        showTyping ? 'bg-[#7c6dfa]' : 'bg-slate-300 dark:bg-white/10'
                       }`}
                     >
                       <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
@@ -304,18 +306,18 @@ const Settings = () => {
             {activeTab === 'account' && (
               <div className="space-y-6 animate-slide-in-right">
                 <div>
-                  <h2 className="text-base font-extrabold text-white mb-1">Security & Identity</h2>
+                  <h2 className="text-base font-extrabold text-pri mb-1">Security & Identity</h2>
                   <p className="text-slate-500 text-[11px] leading-normal font-mono max-w-sm">Manage security attributes, verified credentials, and update your profile details.</p>
                 </div>
 
                 {/* Profile Card & Photo Editor */}
-                <div className="flex flex-col sm:flex-row items-center gap-5 p-5 border border-white/5 bg-[#16161f] rounded-xl">
+                <div className="flex flex-col sm:flex-row items-center gap-5 p-5 border border-pri bg-panel rounded-xl">
                   {/* Photo Edit */}
                   <div className="relative group flex-shrink-0 cursor-pointer" onClick={() => fileRef.current?.click()}>
                     <img
-                      src={avatarPreview || getAvatar()}
-                      alt="avatar"
-                      className="w-20 h-20 rounded-2xl object-cover border border-white/10 group-hover:border-[#7c6dfa] transition-all duration-200"
+                       src={avatarPreview || getAvatar()}
+                       alt="avatar"
+                       className="w-20 h-20 rounded-2xl object-cover border border-pri group-hover:border-[#7c6dfa] transition-all duration-200"
                     />
                     <div className="absolute inset-0 rounded-2xl bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
                       <Camera size={18} className="text-white" />
@@ -326,7 +328,7 @@ const Settings = () => {
 
                   <div className="min-w-0 flex-1 text-center sm:text-left">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 justify-center sm:justify-start">
-                      <p className="text-xs font-extrabold text-white">@{user?.username}</p>
+                      <p className="text-xs font-extrabold text-pri">@{user?.username}</p>
                       <span
                         className="self-center px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider font-mono rounded-full border border-indigo-500/20 bg-indigo-500/10 text-indigo-400"
                       >
@@ -344,12 +346,12 @@ const Settings = () => {
                 <div className="space-y-4">
                   {/* Username Field */}
                   <div>
-                    <label className="text-[10px] font-mono tracking-wider text-slate-400 mb-1.5 block uppercase">Username</label>
+                    <label className="text-[10px] font-mono tracking-wider text-mute mb-1.5 block uppercase">Username</label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-mono">@</span>
                       <input
                         type="text"
-                        className="w-full bg-[#16161f] text-[#e8e6ff] border border-white/5 rounded-lg py-2.5 pl-7 pr-4 text-xs font-sans placeholder-slate-600 outline-none focus:border-[#7c6dfa]/40 transition-all duration-150"
+                        className="w-full bg-panel text-pri border border-pri rounded-lg py-2.5 pl-7 pr-4 text-xs font-sans placeholder-slate-600 outline-none focus:border-[#7c6dfa]/40 transition-all duration-150"
                         value={profileForm.username}
                         onChange={(e) => setProfileForm({ ...profileForm, username: e.target.value })}
                         placeholder="username"
@@ -359,10 +361,10 @@ const Settings = () => {
 
                   {/* Nickname Field */}
                   <div>
-                    <label className="text-[10px] font-mono tracking-wider text-slate-400 mb-1.5 block uppercase">Nickname</label>
+                    <label className="text-[10px] font-mono tracking-wider text-mute mb-1.5 block uppercase">Nickname</label>
                     <input
                       type="text"
-                      className="w-full bg-[#16161f] text-[#e8e6ff] border border-white/5 rounded-lg py-2.5 px-3.5 text-xs font-sans placeholder-slate-600 outline-none focus:border-[#7c6dfa]/40 transition-all duration-150"
+                      className="w-full bg-panel text-pri border border-pri rounded-lg py-2.5 px-3.5 text-xs font-sans placeholder-slate-600 outline-none focus:border-[#7c6dfa]/40 transition-all duration-150"
                       value={profileForm.nickname || ''}
                       onChange={(e) => setProfileForm({ ...profileForm, nickname: e.target.value })}
                       placeholder="Enter nickname"
@@ -371,9 +373,9 @@ const Settings = () => {
 
                   {/* Bio Field */}
                   <div>
-                    <label className="text-[10px] font-mono tracking-wider text-slate-400 mb-1.5 block uppercase">Bio</label>
+                    <label className="text-[10px] font-mono tracking-wider text-mute mb-1.5 block uppercase">Bio</label>
                     <textarea
-                      className="w-full bg-[#16161f] text-[#e8e6ff] border border-white/5 rounded-lg py-2.5 px-3.5 text-xs font-sans placeholder-slate-600 outline-none focus:border-[#7c6dfa]/40 transition-all duration-150 resize-none"
+                      className="w-full bg-panel text-pri border border-pri rounded-lg py-2.5 px-3.5 text-xs font-sans placeholder-slate-600 outline-none focus:border-[#7c6dfa]/40 transition-all duration-150 resize-none"
                       rows={3}
                       value={profileForm.bio}
                       onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
@@ -398,12 +400,12 @@ const Settings = () => {
                 </div>
 
                 {/* Info blocks */}
-                <div className="border border-white/5 rounded-xl bg-[#16161f] divide-y divide-white/5 font-mono text-[10px]">
+                <div className="border border-pri rounded-xl bg-panel divide-y divide-[var(--border-primary)] font-mono text-[10px]">
                   
                   {/* Auth Provider */}
                   <div className="flex justify-between items-center p-3.5">
                     <span className="text-slate-500">PROVIDER</span>
-                    <span className="text-slate-300 font-bold">
+                    <span className="text-pri font-bold">
                       {user?.provider === 'google' ? '🟢 GOOGLE AUTHORIZED' : '📧 EMAIL & PASSWORD'}
                     </span>
                   </div>
@@ -412,7 +414,7 @@ const Settings = () => {
                   {user?.createdAt && (
                     <div className="flex justify-between items-center p-3.5">
                       <span className="text-slate-500">CREATION DATE</span>
-                      <span className="text-slate-300">
+                      <span className="text-pri">
                         {new Date(user.createdAt).toLocaleDateString(undefined, {
                           year: 'numeric',
                           month: 'long',
