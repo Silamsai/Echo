@@ -1,196 +1,400 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
-@theme {
-  --color-echo-purple: #7c6dfa;
-  --color-echo-pink: #fa6d9b;
-  --color-echo-dark: #0a0a0f;
-  --color-echo-card: #111118;
-  --color-echo-panel: #16161f;
-  --color-echo-border: rgba(255, 255, 255, 0.07);
-  --color-echo-online: #4ade80;
-  
-  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-}
-
+/* ───────────────────────────────────────────────────────── */
+/*  DARK THEME (default)                                      */
+/* ───────────────────────────────────────────────────────── */
 :root {
-  /* Common UI Variables */
-  --bg-primary: #0a0a0f;
-  --bg-card: #111118;
-  --bg-panel: #16161f;
-  --border-color: rgba(255, 255, 255, 0.07);
-  --text-main: #e8e6ff;
-  --text-muted: rgba(232, 230, 255, 0.4);
-  --online-color: #4ade80;
+  --bg-app:       #0a0a0f;
+  --bg-navbar:    #0b0b13;
+  --bg-sidebar:   #0e0e14;
+  --bg-surface:   #111118;
+  --bg-panel:     #16161f;
+  --bg-input:     #14141c;
+  --bg-hover:     rgba(255,255,255,0.05);
+
+  --border-primary:   rgba(255,255,255,0.07);
+  --border-focus:     rgba(124,109,250,0.45);
+
+  --text-primary:     #e8e6ff;
+  --text-secondary:   rgba(232,230,255,0.55);
+  --text-muted:       #64748b;
+  --text-label:       #94a3b8;
+
+  --accent:           #7c6dfa;
+  --accent-end:       #5956e9;
+  --accent-glow:      rgba(124,109,250,0.18);
+  --accent-border:    rgba(124,109,250,0.28);
+
+  --online:           #4ade80;
+  --shadow-card:      0 24px 80px rgba(0,0,0,0.72);
+  --scrollbar-thumb:  rgba(255,255,255,0.08);
+
+  /* Chat bubble defaults */
+  --bubble-sent-bg:       rgba(124,109,250,0.16);
+  --bubble-sent-border:   rgba(124,109,250,0.26);
+  --bubble-sent-text:     #e8e6ff;
+  --bubble-recv-bg:       #16161f;
+  --bubble-recv-border:   rgba(255,255,255,0.07);
+
+  /* Chat area background */
+  --chat-bg-start:    #0a0a0f;
+  --chat-bg-end:      #0d0d16;
+
+  color-scheme: dark;
 }
 
+/* ───────────────────────────────────────────────────────── */
+/*  LIGHT THEME                                               */
+/* ───────────────────────────────────────────────────────── */
+:root.light {
+  --bg-app:       #f3f4f8;
+  --bg-navbar:    #ffffff;
+  --bg-sidebar:   #f8f9fc;
+  --bg-surface:   #ffffff;
+  --bg-panel:     #f1f3f7;
+  --bg-input:     #eef0f5;
+  --bg-hover:     rgba(0,0,0,0.04);
+
+  --border-primary:   rgba(0,0,0,0.09);
+  --border-focus:     rgba(124,109,250,0.5);
+
+  --text-primary:     #1e1b3a;
+  --text-secondary:   rgba(30,27,58,0.6);
+  --text-muted:       #94a3b8;
+  --text-label:       #64748b;
+
+  --accent:           #7c6dfa;
+  --accent-end:       #5956e9;
+  --accent-glow:      rgba(124,109,250,0.12);
+  --accent-border:    rgba(124,109,250,0.3);
+
+  --online:           #22c55e;
+  --shadow-card:      0 8px 40px rgba(0,0,0,0.10);
+  --scrollbar-thumb:  rgba(0,0,0,0.12);
+
+  --bubble-sent-bg:       rgba(124,109,250,0.14);
+  --bubble-sent-border:   rgba(124,109,250,0.22);
+  --bubble-sent-text:     #1e1b3a;
+  --bubble-recv-bg:       #f1f3f7;
+  --bubble-recv-border:   rgba(0,0,0,0.08);
+
+  --chat-bg-start:    #f0f2f8;
+  --chat-bg-end:      #eaecf4;
+
+  color-scheme: light;
+}
+
+/* ───────────────────────────────────────────────────────── */
+/*  CHAT GRADIENT THEMES                                      */
+/* ───────────────────────────────────────────────────────── */
+/* midnight (default purple) */
+:root, .chat-theme-midnight {
+  --chat-bg-start:        #0a0a0f;
+  --chat-bg-end:          #0d0d16;
+  --bubble-sent-bg:       rgba(124,109,250,0.16);
+  --bubble-sent-border:   rgba(124,109,250,0.26);
+}
+.chat-theme-indigo {
+  --chat-bg-start:        #080d1e;
+  --chat-bg-end:          #0d1530;
+  --bubble-sent-bg:       rgba(79,70,229,0.22);
+  --bubble-sent-border:   rgba(99,102,241,0.35);
+}
+.chat-theme-emerald {
+  --chat-bg-start:        #061210;
+  --chat-bg-end:          #091a18;
+  --bubble-sent-bg:       rgba(16,185,129,0.18);
+  --bubble-sent-border:   rgba(16,185,129,0.30);
+}
+.chat-theme-sunset {
+  --chat-bg-start:        #140a0a;
+  --chat-bg-end:          #1e0e14;
+  --bubble-sent-bg:       rgba(244,63,94,0.18);
+  --bubble-sent-border:   rgba(251,113,133,0.30);
+}
+.chat-theme-amber {
+  --chat-bg-start:        #130e04;
+  --chat-bg-end:          #1c1406;
+  --bubble-sent-bg:       rgba(245,158,11,0.18);
+  --bubble-sent-border:   rgba(251,191,36,0.30);
+}
+.chat-theme-charcoal {
+  --chat-bg-start:        #0d0d0d;
+  --chat-bg-end:          #141414;
+  --bubble-sent-bg:       rgba(100,116,139,0.20);
+  --bubble-sent-border:   rgba(148,163,184,0.22);
+}
+/* Light mode per-theme overrides */
+:root.light .chat-theme-midnight,
+:root.light {
+  --chat-bg-start:    #f0f2f8;
+  --chat-bg-end:      #eaecf4;
+}
+:root.light .chat-theme-indigo {
+  --chat-bg-start:    #eef0fc;
+  --chat-bg-end:      #e4e8f9;
+}
+:root.light .chat-theme-emerald {
+  --chat-bg-start:    #ecfaf6;
+  --chat-bg-end:      #e0f5ef;
+}
+:root.light .chat-theme-sunset {
+  --chat-bg-start:    #fdf1f3;
+  --chat-bg-end:      #fce8ec;
+}
+:root.light .chat-theme-amber {
+  --chat-bg-start:    #fdf8ed;
+  --chat-bg-end:      #faf2d9;
+}
+:root.light .chat-theme-charcoal {
+  --chat-bg-start:    #f2f3f5;
+  --chat-bg-end:      #e8eaef;
+}
+
+/* ───────────────────────────────────────────────────────── */
+/*  BASE                                                      */
+/* ───────────────────────────────────────────────────────── */
 html, body, #root {
   height: 100%;
   height: 100dvh;
-  background-color: var(--bg-primary);
-  color: var(--text-main);
-  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   overflow: hidden;
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.35s ease, color 0.35s ease;
+  /* Performance: hint GPU compositing for the whole app */
+  isolation: isolate;
 }
 
-/* Custom Sleek Scrollbar */
-::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 99px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-echo-purple);
+/* Promote animated elements to their own GPU layer */
+[class*="animate-"],
+[style*="animation"],
+.fade-in,
+.animate-slide-in-right {
+  will-change: transform, opacity;
 }
 
-/* Futuristic Glass Card */
+/* Prevent layout thrash from transform animations */
+.bubble-sent,
+.bubble-received {
+  contain: layout style;
+}
+
+/* Smooth font rendering */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  box-sizing: border-box;
+}
+
+/* ───────────────────────────────────────────────────────── */
+/*  SCROLLBAR                                                 */
+/* ───────────────────────────────────────────────────────── */
+::-webkit-scrollbar         { width: 4px; height: 4px; }
+::-webkit-scrollbar-track   { background: transparent; }
+::-webkit-scrollbar-thumb   { background: var(--scrollbar-thumb); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ───────────────────────────────────────────────────────── */
+/*  THEMING UTILITIES (replace hardcoded colours)            */
+/* ───────────────────────────────────────────────────────── */
+.bg-app       { background-color: var(--bg-app); }
+.bg-navbar    { background-color: var(--bg-navbar); }
+.bg-sidebar   { background-color: var(--bg-sidebar); }
+.bg-surface   { background-color: var(--bg-surface); }
+.bg-panel     { background-color: var(--bg-panel); }
+.bg-input-f   { background-color: var(--bg-input); }
+.border-pri   { border-color: var(--border-primary); }
+.text-pri     { color: var(--text-primary); }
+.text-sec     { color: var(--text-secondary); }
+.text-mute    { color: var(--text-muted); }
+
+/* ───────────────────────────────────────────────────────── */
+/*  GLASS CARD                                               */
+/* ───────────────────────────────────────────────────────── */
 .glass {
-  background: rgba(17, 17, 24, 0.85);
+  background: rgba(17,17,24,0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 0.5px solid var(--border-color);
+  border: 0.5px solid var(--border-primary);
+  transition: background 0.3s ease;
+}
+:root.light .glass {
+  background: rgba(255,255,255,0.88);
 }
 
-/* Gradient Text */
+/* ───────────────────────────────────────────────────────── */
+/*  GRADIENT TEXT                                            */
+/* ───────────────────────────────────────────────────────── */
 .gradient-text {
-  background: linear-gradient(135deg, var(--color-echo-purple), var(--color-echo-pink));
+  background: linear-gradient(135deg, var(--accent), #fa6d9b);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Macbook-style Primary Button */
+/* ───────────────────────────────────────────────────────── */
+/*  RESIZER HANDLE                                           */
+/* ───────────────────────────────────────────────────────── */
+.resize-handle {
+  width: 4px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  background: transparent;
+  transition: background 0.15s ease;
+  position: relative;
+  z-index: 10;
+  user-select: none;
+}
+.resize-handle:hover,
+.resize-handle.active {
+  background: var(--accent);
+  opacity: 0.6;
+}
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  inset: 0 -4px;
+}
+
+/* ───────────────────────────────────────────────────────── */
+/*  BUTTONS                                                  */
+/* ───────────────────────────────────────────────────────── */
 .btn-primary {
-  background: linear-gradient(180deg, var(--color-echo-purple) 0%, #6057e8 100%);
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-end) 100%);
   color: white;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,0.2);
+  border-radius: 8px;
   padding: 8px 20px;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 13px;
   cursor: pointer;
   transition: all 0.12s ease;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 1px 2px rgba(0, 0, 0, 0.15);
-  font-family: var(--font-sans);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 2px 6px rgba(0,0,0,0.2);
+  font-family: inherit;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
 }
-.btn-primary:hover {
-  background: linear-gradient(180deg, #8c7ffa 0%, #7063f0 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-.btn-primary:active {
-  background: linear-gradient(180deg, #6057e8 0%, #524ad0 100%);
-  box-shadow: inset 0 1.5px 3px rgba(0, 0, 0, 0.25), 0 1px 1px rgba(0, 0, 0, 0.05);
-}
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  box-shadow: none;
-}
+.btn-primary:hover  { background: linear-gradient(180deg, #8c7ffa 0%, #7063f0 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 3px 10px rgba(124,109,250,0.25); }
+.btn-primary:active { background: linear-gradient(180deg, #6057e8 0%, #524ad0 100%); box-shadow: inset 0 1.5px 3px rgba(0,0,0,0.25); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
 
-/* Macbook-style Secondary/Ghost Button */
 .btn-ghost {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-main);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
   padding: 8px 16px;
   font-weight: 500;
   font-size: 13px;
   cursor: pointer;
   transition: all 0.12s;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
 }
-.btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.10);
-  border-color: rgba(255, 255, 255, 0.15);
-}
-.btn-ghost:active {
-  background: rgba(255, 255, 255, 0.03);
-}
+.btn-ghost:hover  { background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.15); }
+:root.light .btn-ghost:hover { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.14); }
+.btn-ghost:active { opacity: 0.8; }
 
-/* Macbook-style Input Fields */
+/* ───────────────────────────────────────────────────────── */
+/*  INPUTS                                                   */
+/* ───────────────────────────────────────────────────────── */
 .input-field {
   width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
-  padding: 8px 12px;
-  color: var(--text-main);
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: var(--text-primary);
   font-size: 13px;
   outline: none;
   transition: all 0.15s ease;
-  font-family: var(--font-sans);
+  font-family: inherit;
 }
 .input-field:focus {
-  border-color: rgba(124, 109, 250, 0.60);
-  box-shadow: 0 0 0 3px rgba(124, 109, 250, 0.20);
-  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--accent-glow);
 }
-.input-field::placeholder {
-  color: var(--text-muted);
-}
+.input-field::placeholder { color: var(--text-muted); }
 
-/* Online status indicator dot */
+/* ───────────────────────────────────────────────────────── */
+/*  ONLINE DOT                                               */
+/* ───────────────────────────────────────────────────────── */
 .online-dot {
-  width: 8px;
-  height: 8px;
-  background: var(--online-color);
+  width: 8px; height: 8px;
+  background: var(--online);
   border-radius: 50%;
-  box-shadow: 0 0 6px var(--online-color);
+  box-shadow: 0 0 6px var(--online);
   display: inline-block;
 }
 
-/* Message Bubble Styles */
+/* ───────────────────────────────────────────────────────── */
+/*  MESSAGE BUBBLES                                          */
+/* ───────────────────────────────────────────────────────── */
 .bubble-sent {
-  background: rgba(124, 109, 250, 0.16);
-  color: var(--text-main);
-  border: 0.5px solid rgba(124, 109, 250, 0.26);
+  background: var(--bubble-sent-bg);
+  color: var(--bubble-sent-text, var(--text-primary));
+  border: 0.5px solid var(--bubble-sent-border);
   border-radius: 14px 4px 14px 14px;
   padding: 10px 14px;
   max-width: 100%;
   word-break: break-word;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 .bubble-received {
-  background: var(--bg-panel);
-  color: var(--text-main);
-  border: 0.5px solid var(--border-color);
+  background: var(--bubble-recv-bg);
+  color: var(--text-primary);
+  border: 0.5px solid var(--bubble-recv-border);
   border-radius: 4px 14px 14px 14px;
   padding: 10px 14px;
   max-width: 100%;
   word-break: break-word;
+  transition: background 0.3s ease;
 }
 
-/* Animations */
+/* ───────────────────────────────────────────────────────── */
+/*  ANIMATIONS                                               */
+/* ───────────────────────────────────────────────────────── */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-.fade-in {
-  animation: fadeIn 0.25s ease-out forwards;
+.fade-in { animation: fadeIn 0.25s ease-out forwards; }
+
+@keyframes slideInR {
+  from { transform: translateX(20px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+.animate-slide-in-right { animation: slideInR 0.22s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Micro-interaction: button press feedback */
+@keyframes btnTap {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(0.94); }
+  100% { transform: scale(1); }
 }
 
-/* Typing Indicators */
+/* Liquid entrance for cards */
+@keyframes liquidReveal {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); filter: blur(4px); }
+  to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+.animate-liquid-reveal { animation: liquidReveal 0.5s cubic-bezier(0.16,1,0.3,1) forwards; }
+
+/* ───────────────────────────────────────────────────────── */
+/*  TYPING INDICATOR                                         */
+/* ───────────────────────────────────────────────────────── */
 .typing-dot {
-  width: 5px;
-  height: 5px;
+  width: 5px; height: 5px;
   background: var(--text-muted);
   border-radius: 50%;
   animation: typing-bounce 1.3s infinite ease-in-out;
@@ -202,14 +406,50 @@ html, body, #root {
   30% { transform: translateY(-4px); }
 }
 
-/* Voice Waveform Visualization */
+/* ───────────────────────────────────────────────────────── */
+/*  WAVEFORM                                                 */
+/* ───────────────────────────────────────────────────────── */
 .waveform-bar {
   width: 3px;
-  background: var(--color-echo-purple);
+  background: var(--accent);
   border-radius: 3px;
   animation: wave 1s ease-in-out infinite;
+  will-change: transform;
 }
 @keyframes wave {
   0%, 100% { transform: scaleY(0.3); }
   50% { transform: scaleY(1); }
+}
+
+/* ───────────────────────────────────────────────────────── */
+/*  CHAT THEME AREA                                          */
+/* ───────────────────────────────────────────────────────── */
+.chat-messages-area {
+  background: linear-gradient(180deg, var(--chat-bg-start) 0%, var(--chat-bg-end) 100%);
+  transition: background 0.4s ease;
+  /* Performance: avoid repaint on scroll */
+  contain: layout style;
+  will-change: scroll-position;
+}
+
+/* ───────────────────────────────────────────────────────── */
+/*  LIQUID GLASS UTILITY                                     */
+/* ───────────────────────────────────────────────────────── */
+.glass-liquid {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

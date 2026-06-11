@@ -1,17 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { MessageSquare, Lock, Mic, Globe, Shield, Mail, User, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, User, Eye, EyeOff, Sparkles, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axiosInstance from '../utils/axiosInstance';
 import useAuthStore from '../store/authStore';
 
 const GOOGLE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/auth/google`;
 
+/* ── Echo Logo ── */
 const EchoMark = ({ size = 32 }) => (
   <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
     <defs>
       <linearGradient id="reg-logo-g" x1="20%" y1="10%" x2="80%" y2="90%">
-        <stop offset="0%" stopColor="#6eb5ff" />
+        <stop offset="0%" stopColor="#a78bfa" />
         <stop offset="50%" stopColor="#7b6ef6" />
         <stop offset="100%" stopColor="#5956e9" />
       </linearGradient>
@@ -21,22 +22,56 @@ const EchoMark = ({ size = 32 }) => (
   </svg>
 );
 
+/* ── Liquid Orb ── */
+const LiquidOrb = ({ style }) => (
+  <div style={{
+    position: 'absolute',
+    borderRadius: '50%',
+    filter: 'blur(80px)',
+    pointerEvents: 'none',
+    willChange: 'transform',
+    ...style,
+  }} />
+);
+
+/* ── Feature Tag ── */
+const FeatureTag = ({ icon, text, delay }) => (
+  <div style={{
+    display: 'flex', alignItems: 'center', gap: '6px',
+    padding: '6px 12px',
+    background: 'rgba(255,255,255,0.05)',
+    backdropFilter: 'blur(12px)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: '99px',
+    fontSize: '11px',
+    color: 'rgba(255,255,255,0.6)',
+    fontFamily: '"Plus Jakarta Sans", sans-serif',
+    fontWeight: 500,
+    animation: `tagFadeIn 0.6s ease forwards ${delay}`,
+    opacity: 0,
+  }}>
+    <span style={{ fontSize: '12px' }}>{icon}</span>
+    {text}
+  </div>
+);
+
 const Register = () => {
   const [form, setForm] = useState({ username: '', email: '', password: '', confirmPassword: '' });
   const [showPw, setShowPw] = useState(false);
   const [showCPw, setShowCPw] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [focusedField, setFocusedField] = useState(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const cardRef = useRef(null);
   const navigate = useNavigate();
-
   const { loginWithToken } = useAuthStore();
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
+    const handleMouse = (e) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener('mousemove', handleMouse, { passive: true });
+    return () => window.removeEventListener('mousemove', handleMouse);
   }, []);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -60,7 +95,7 @@ const Register = () => {
       });
       if (data.token) {
         loginWithToken(data.token, data.user);
-        toast.success('Registration successful! Welcome to Echo 🎉');
+        toast.success('Welcome to Echo 🎉');
         navigate('/');
       } else {
         toast.success('OTP sent to your email! 📧');
@@ -73,94 +108,221 @@ const Register = () => {
     }
   };
 
+  const getFieldStyle = (name) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '12px 16px',
+    background: focusedField === name
+      ? 'rgba(123,110,246,0.08)'
+      : 'rgba(255,255,255,0.04)',
+    border: `1px solid ${focusedField === name ? 'rgba(123,110,246,0.5)' : 'rgba(255,255,255,0.08)'}`,
+    borderRadius: '14px',
+    transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)',
+    boxShadow: focusedField === name ? '0 0 0 3px rgba(123,110,246,0.12), inset 0 1px 0 rgba(255,255,255,0.08)' : 'inset 0 1px 0 rgba(255,255,255,0.04)',
+  });
+
   return (
-    <div className="min-h-screen w-screen flex items-center justify-center p-4 md:p-6 overflow-y-auto select-none bg-[#07070c] relative">
-      {/* Background lights */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[#7b6ef6]/8 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[#5956e9]/6 blur-[120px] pointer-events-none" />
+    <div style={{
+      minHeight: '100vh',
+      width: '100vw',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '24px',
+      overflow: 'auto',
+      background: '#050508',
+      position: 'relative',
+      fontFamily: '"Plus Jakarta Sans", -apple-system, sans-serif',
+    }}>
+      <style>{`
+        @keyframes liquidOrb {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(30px, -20px) scale(1.05); }
+          66% { transform: translate(-20px, 15px) scale(0.97); }
+        }
+        @keyframes liquidOrb2 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          40% { transform: translate(-25px, 20px) scale(1.08); }
+          70% { transform: translate(15px, -10px) scale(0.95); }
+        }
+        @keyframes liquidOrb3 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(20px, 25px) scale(1.1); }
+        }
+        @keyframes cardReveal {
+          from { opacity: 0; transform: translateY(24px) scale(0.97); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes tagFadeIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes shimmer {
+          0% { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+        @keyframes spinLoader {
+          to { transform: rotate(360deg); }
+        }
+        @keyframes dotPulse {
+          0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+          40% { opacity: 1; transform: scale(1); }
+        }
+        .reg-input {
+          flex: 1;
+          background: transparent;
+          border: none;
+          outline: none;
+          color: #f0eeff;
+          font-size: 13px;
+          font-family: "Plus Jakarta Sans", sans-serif;
+          font-weight: 500;
+        }
+        .reg-input::placeholder { color: rgba(255,255,255,0.2); }
+        .reg-btn-google:hover { background: rgba(255,255,255,0.09) !important; transform: translateY(-1px); }
+        .reg-btn-google:active { transform: translateY(0); }
+        .reg-submit-btn:not(:disabled):hover { 
+          box-shadow: 0 8px 32px rgba(123,110,246,0.45), 0 2px 8px rgba(0,0,0,0.3) !important;
+          transform: translateY(-1px);
+        }
+        .reg-submit-btn:active { transform: translateY(0) !important; }
+        .feature-left-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 10px 12px;
+          border-radius: 12px;
+          transition: background 0.2s;
+          animation: tagFadeIn 0.5s ease forwards;
+          opacity: 0;
+        }
+        .feature-left-item:hover { background: rgba(255,255,255,0.04); }
+      `}</style>
 
-      {/* Main Glass Card */}
-      <div className="w-full max-w-[880px] rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-[0_30px_100px_rgba(0,0,0,0.8)] border border-white/5 bg-[#0e0e15]/40 backdrop-blur-xl z-10 animate-fade-in">
-        
-        {/* LEFT COLUMN: Features Panel (Hidden on Mobile) */}
-        {!isMobile && (
-          <div className="w-[38%] bg-gradient-to-br from-[#0c0c16] to-[#121226] p-10 flex flex-col justify-between border-r border-white/5 relative overflow-hidden">
-            {/* Sparkles */}
-            <div className="absolute inset-0 opacity-20 pointer-events-none">
-              <div className="absolute top-10 left-20 w-1 h-1 bg-white rounded-full animate-ping" />
-              <div className="absolute top-40 left-10 w-1 h-1 bg-white rounded-full animate-pulse" />
-              <div className="absolute bottom-20 left-32 w-1.5 h-1.5 bg-white rounded-full animate-ping" />
-            </div>
+      {/* Liquid orbs */}
+      <LiquidOrb style={{ width: 600, height: 600, background: 'radial-gradient(circle, rgba(123,110,246,0.18) 0%, transparent 70%)', top: '-15%', left: '-15%', animation: 'liquidOrb 12s ease-in-out infinite' }} />
+      <LiquidOrb style={{ width: 500, height: 500, background: 'radial-gradient(circle, rgba(88,86,233,0.12) 0%, transparent 70%)', bottom: '-10%', right: '-10%', animation: 'liquidOrb2 15s ease-in-out infinite' }} />
+      <LiquidOrb style={{ width: 350, height: 350, background: 'radial-gradient(circle, rgba(110,181,255,0.1) 0%, transparent 70%)', top: '40%', right: '20%', animation: 'liquidOrb3 10s ease-in-out infinite' }} />
 
-            {/* Header */}
-            <div className="flex items-center gap-3">
-              <EchoMark size={32} />
-              <span className="text-white text-xl font-black tracking-tight font-sans">echo</span>
-            </div>
+      {/* Glass card */}
+      <div ref={cardRef} style={{
+        width: '100%',
+        maxWidth: '900px',
+        display: 'flex',
+        borderRadius: '28px',
+        overflow: 'hidden',
+        background: 'rgba(255,255,255,0.04)',
+        backdropFilter: 'blur(40px)',
+        WebkitBackdropFilter: 'blur(40px)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        boxShadow: '0 40px 120px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.12)',
+        animation: 'cardReveal 0.7s cubic-bezier(0.16,1,0.3,1) forwards',
+        position: 'relative',
+        zIndex: 10,
+      }}>
 
-            {/* Tagline */}
-            <div className="my-8">
-              <h2 className="text-2xl font-black text-white leading-tight">
-                Join <br />
-                <span className="bg-gradient-to-r from-[#7b6ef6] to-[#6eb5ff] bg-clip-text text-transparent">Echo.</span>
-              </h2>
-              <p className="text-slate-400 text-xs mt-3 leading-relaxed">
-                Create an account to start communicating in real-time, holding encrypted chats, and setting custom preferences.
-              </p>
-            </div>
-
-            {/* Features List */}
-            <div className="space-y-4 my-auto">
-              {[
-                { icon: MessageSquare, text: 'Real-time chatting with messaging queues', color: 'text-[#7b6ef6]' },
-                { icon: Shield, text: 'Secure accounts with verified sessions', color: 'text-[#22c55e]' },
-                { icon: Mic, text: 'Voice notes and rich image attachments', color: 'text-[#ec4899]' },
-                { icon: Globe, text: 'Stay connected on web or mobile devices', color: 'text-[#06b6d4]' },
-              ].map((feat, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
-                    <feat.icon size={15} className={feat.color} />
-                  </div>
-                  <span className="text-slate-300 text-[11px] leading-snug">{feat.text}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Footer Trust Strip */}
-            <div className="mt-8 pt-4 border-t border-white/5 flex items-center gap-3 text-slate-500">
-              <Shield size={14} className="text-slate-600" />
-              <div className="text-[10px]">
-                <p className="font-semibold text-slate-400">Encrypted Workspace</p>
-                <p className="text-[9px] text-slate-500">Privacy & Security guaranteed.</p>
-              </div>
+        {/* LEFT PANEL */}
+        <div style={{
+          width: '40%',
+          minWidth: '300px',
+          padding: '44px 36px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          background: 'linear-gradient(160deg, rgba(123,110,246,0.12) 0%, rgba(88,86,233,0.06) 50%, rgba(0,0,0,0) 100%)',
+          borderRight: '1px solid rgba(255,255,255,0.06)',
+          position: 'relative',
+          overflow: 'hidden',
+        }} className="reg-left-panel">
+          {/* Subtle mesh */}
+          <div style={{
+            position: 'absolute', inset: 0, opacity: 0.3, pointerEvents: 'none',
+            backgroundImage: `radial-gradient(circle at 30% 20%, rgba(123,110,246,0.25) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(110,181,255,0.15) 0%, transparent 50%)`,
+          }} />
+          
+          {/* Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', position: 'relative', zIndex: 1 }}>
+            <EchoMark size={36} />
+            <div>
+              <div style={{ color: '#fff', fontWeight: 900, fontSize: '20px', letterSpacing: '-0.5px', lineHeight: 1 }}>echo</div>
+              <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', letterSpacing: '2px', textTransform: 'uppercase', fontFamily: 'monospace', marginTop: '2px' }}>by Silamsai</div>
             </div>
           </div>
-        )}
 
-        {/* RIGHT COLUMN: Signup Form */}
-        <div className="flex-1 bg-[#0b0b11]/80 p-8 md:p-10 flex flex-col justify-center min-h-[500px]">
-          
-          {/* Logo showing only on mobile */}
-          {isMobile && (
-            <div className="flex justify-center mb-5">
-              <div className="flex items-center gap-2">
-                <EchoMark size={36} />
-                <span className="text-white text-2xl font-black tracking-tight">echo</span>
-              </div>
+          {/* Main headline */}
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Sparkles size={14} style={{ color: '#a78bfa' }} />
+              <span style={{ color: '#a78bfa', fontSize: '11px', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', fontFamily: 'monospace' }}>New account</span>
             </div>
-          )}
+            <h2 style={{ color: '#fff', fontSize: '30px', fontWeight: 900, lineHeight: 1.15, letterSpacing: '-1px', margin: 0 }}>
+              Start your<br />
+              <span style={{ background: 'linear-gradient(135deg, #a78bfa, #7b6ef6, #6eb5ff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                journey.
+              </span>
+            </h2>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12.5px', lineHeight: 1.65, marginTop: '12px', maxWidth: '220px' }}>
+              Join thousands of people connecting through Echo's encrypted messaging platform.
+            </p>
+          </div>
 
-          <div className="mb-5 text-center">
-            <h1 className="text-lg font-bold text-white tracking-tight">Create your account</h1>
-            <p className="text-slate-400 text-xs mt-1">Get started with your secure workspace account</p>
+          {/* Feature list */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', position: 'relative', zIndex: 1 }}>
+            {[
+              { icon: '💬', label: 'Real-time messages', color: '#a78bfa', delay: '0.1s' },
+              { icon: '🔒', label: 'End-to-end encrypted', color: '#34d399', delay: '0.2s' },
+              { icon: '🎙️', label: 'Voice notes & media', color: '#f472b6', delay: '0.3s' },
+              { icon: '🌐', label: 'Web & mobile ready', color: '#38bdf8', delay: '0.4s' },
+            ].map((f, i) => (
+              <div key={i} className="feature-left-item" style={{ animationDelay: f.delay }}>
+                <div style={{
+                  width: '32px', height: '32px', borderRadius: '10px', flexShrink: 0,
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '14px',
+                }}>{f.icon}</div>
+                <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: '12px', fontWeight: 500 }}>{f.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Footer strip */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 14px', background: 'rgba(255,255,255,0.04)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.07)', position: 'relative', zIndex: 1 }}>
+            <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'linear-gradient(135deg, rgba(52,211,153,0.2), rgba(52,211,153,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px' }}>🛡️</div>
+            <div>
+              <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px', fontWeight: 600 }}>Privacy Guaranteed</div>
+              <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', letterSpacing: '0.3px' }}>Your data stays yours, always.</div>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT PANEL — Form */}
+        <div style={{ flex: 1, padding: '44px 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'rgba(0,0,0,0.25)', minHeight: '580px' }}>
+          
+          <div style={{ marginBottom: '28px' }}>
+            <h1 style={{ color: '#fff', fontSize: '22px', fontWeight: 800, letterSpacing: '-0.5px', margin: 0 }}>Create account</h1>
+            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '12.5px', marginTop: '5px' }}>Fill in your details to get started</p>
           </div>
 
           {/* Google SSO */}
-          <a
-            href={GOOGLE_URL}
-            className="flex items-center justify-center gap-3 w-full py-2.5 rounded-xl border border-white/5 bg-[#14141c] hover:bg-[#1a1a26] text-slate-200 text-xs font-semibold cursor-pointer transition-all duration-200 shadow-md"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24">
+          <a href={GOOGLE_URL} className="reg-btn-google" style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+            padding: '12px 18px',
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            borderRadius: '14px',
+            color: 'rgba(255,255,255,0.85)',
+            fontSize: '13px',
+            fontWeight: 600,
+            textDecoration: 'none',
+            transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+            marginBottom: '20px',
+            cursor: 'pointer',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)',
+          }}>
+            <svg width="17" height="17" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -169,135 +331,139 @@ const Register = () => {
             Continue with Google
           </a>
 
-          <div className="flex items-center gap-3 my-4">
-            <div className="flex-1 h-[1px] bg-white/5" />
-            <span className="text-[10px] text-slate-500 uppercase font-mono tracking-wider">or sign up</span>
-            <div className="flex-1 h-[1px] bg-white/5" />
+          {/* Divider */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.07)' }} />
+            <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px', letterSpacing: '1.5px', fontFamily: 'monospace', textTransform: 'uppercase' }}>or register</span>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.07)' }} />
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-3.5">
-            {/* Full Name */}
+          {/* Form */}
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            
+            {/* Username */}
             <div>
-              <label className="block text-[10px] uppercase font-mono tracking-wider text-slate-400 mb-1">Full Name</label>
-              <div className="flex items-center bg-[#14141c] border border-white/5 rounded-xl px-3 py-1.5 focus-within:border-[#7b6ef6]/40 focus-within:shadow-[0_0_15px_rgba(123,110,246,0.1)] transition-all">
-                <User size={15} className="text-slate-500 mr-2.5 flex-shrink-0" />
-                <input
-                  id="reg-username"
-                  name="username"
-                  type="text"
-                  placeholder="Enter full name"
-                  value={form.username}
-                  onChange={handleChange}
-                  autoComplete="name"
-                  className="flex-1 bg-transparent border-none outline-none text-xs text-white placeholder-slate-600 font-sans"
+              <label style={{ display: 'block', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px', fontFamily: 'monospace' }}>Full Name</label>
+              <div style={getFieldStyle('username')}>
+                <User size={15} style={{ color: focusedField === 'username' ? '#a78bfa' : 'rgba(255,255,255,0.2)', flexShrink: 0, transition: 'color 0.2s' }} />
+                <input id="reg-username" name="username" type="text" placeholder="Your display name"
+                  value={form.username} onChange={handleChange}
+                  onFocus={() => setFocusedField('username')}
+                  onBlur={() => setFocusedField(null)}
+                  autoComplete="name" className="reg-input"
                 />
               </div>
             </div>
 
             {/* Email */}
             <div>
-              <label className="block text-[10px] uppercase font-mono tracking-wider text-slate-400 mb-1">Email</label>
-              <div className="flex items-center bg-[#14141c] border border-white/5 rounded-xl px-3 py-1.5 focus-within:border-[#7b6ef6]/40 focus-within:shadow-[0_0_15px_rgba(123,110,246,0.1)] transition-all">
-                <Mail size={15} className="text-slate-500 mr-2.5 flex-shrink-0" />
-                <input
-                  id="reg-email"
-                  name="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={form.email}
-                  onChange={handleChange}
-                  autoComplete="email"
-                  className="flex-1 bg-transparent border-none outline-none text-xs text-white placeholder-slate-600 font-sans"
+              <label style={{ display: 'block', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px', fontFamily: 'monospace' }}>Email</label>
+              <div style={getFieldStyle('email')}>
+                <Mail size={15} style={{ color: focusedField === 'email' ? '#a78bfa' : 'rgba(255,255,255,0.2)', flexShrink: 0, transition: 'color 0.2s' }} />
+                <input id="reg-email" name="email" type="email" placeholder="name@example.com"
+                  value={form.email} onChange={handleChange}
+                  onFocus={() => setFocusedField('email')}
+                  onBlur={() => setFocusedField(null)}
+                  autoComplete="email" className="reg-input"
                 />
               </div>
             </div>
 
-            {/* Password */}
-            <div>
-              <label className="block text-[10px] uppercase font-mono tracking-wider text-slate-400 mb-1">Password</label>
-              <div className="flex items-center bg-[#14141c] border border-white/5 rounded-xl px-3 py-1.5 focus-within:border-[#7b6ef6]/40 focus-within:shadow-[0_0_15px_rgba(123,110,246,0.1)] transition-all">
-                <Lock size={15} className="text-slate-500 mr-2.5 flex-shrink-0" />
-                <input
-                  id="reg-password"
-                  name="password"
-                  type={showPw ? 'text' : 'password'}
-                  placeholder="Create password"
-                  value={form.password}
-                  onChange={handleChange}
-                  autoComplete="new-password"
-                  className="flex-1 bg-transparent border-none outline-none text-xs text-white placeholder-slate-600 font-sans"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPw((p) => !p)}
-                  className="text-slate-500 hover:text-slate-300 outline-none flex items-center justify-center p-0.5"
-                >
-                  {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
-                </button>
+            {/* Passwords row */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div>
+                <label style={{ display: 'block', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px', fontFamily: 'monospace' }}>Password</label>
+                <div style={getFieldStyle('password')}>
+                  <Lock size={15} style={{ color: focusedField === 'password' ? '#a78bfa' : 'rgba(255,255,255,0.2)', flexShrink: 0, transition: 'color 0.2s' }} />
+                  <input id="reg-password" name="password" type={showPw ? 'text' : 'password'} placeholder="••••••••"
+                    value={form.password} onChange={handleChange}
+                    onFocus={() => setFocusedField('password')}
+                    onBlur={() => setFocusedField(null)}
+                    autoComplete="new-password" className="reg-input"
+                  />
+                  <button type="button" onClick={() => setShowPw(p => !p)} style={{ color: 'rgba(255,255,255,0.25)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', flexShrink: 0 }}>
+                    {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
               </div>
-            </div>
-
-            {/* Confirm Password */}
-            <div>
-              <label className="block text-[10px] uppercase font-mono tracking-wider text-slate-400 mb-1">Confirm Password</label>
-              <div className="flex items-center bg-[#14141c] border border-white/5 rounded-xl px-3 py-1.5 focus-within:border-[#7b6ef6]/40 focus-within:shadow-[0_0_15px_rgba(123,110,246,0.1)] transition-all">
-                <Lock size={15} className="text-slate-500 mr-2.5 flex-shrink-0" />
-                <input
-                  id="reg-confirm-password"
-                  name="confirmPassword"
-                  type={showCPw ? 'text' : 'password'}
-                  placeholder="Confirm password"
-                  value={form.confirmPassword}
-                  onChange={handleChange}
-                  autoComplete="new-password"
-                  className="flex-1 bg-transparent border-none outline-none text-xs text-white placeholder-slate-600 font-sans"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowCPw((p) => !p)}
-                  className="text-slate-500 hover:text-slate-300 outline-none flex items-center justify-center p-0.5"
-                >
-                  {showCPw ? <EyeOff size={15} /> : <Eye size={15} />}
-                </button>
+              <div>
+                <label style={{ display: 'block', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px', fontFamily: 'monospace' }}>Confirm</label>
+                <div style={getFieldStyle('confirmPassword')}>
+                  <Lock size={15} style={{ color: focusedField === 'confirmPassword' ? '#a78bfa' : 'rgba(255,255,255,0.2)', flexShrink: 0, transition: 'color 0.2s' }} />
+                  <input id="reg-confirm-password" name="confirmPassword" type={showCPw ? 'text' : 'password'} placeholder="••••••••"
+                    value={form.confirmPassword} onChange={handleChange}
+                    onFocus={() => setFocusedField('confirmPassword')}
+                    onBlur={() => setFocusedField(null)}
+                    autoComplete="new-password" className="reg-input"
+                  />
+                  <button type="button" onClick={() => setShowCPw(p => !p)} style={{ color: 'rgba(255,255,255,0.25)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', flexShrink: 0 }}>
+                    {showCPw ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Submit */}
-            <button
-              id="reg-submit"
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 rounded-xl border border-transparent bg-gradient-to-r from-[#7b6ef6] to-[#5956e9] text-white text-xs font-bold shadow-lg shadow-[#7b6ef6]/15 hover:shadow-[#7b6ef6]/30 active:scale-[0.99] transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-5"
-            >
+            <button id="reg-submit" type="submit" disabled={loading} className="reg-submit-btn" style={{
+              width: '100%',
+              padding: '14px 20px',
+              marginTop: '8px',
+              borderRadius: '14px',
+              border: '1px solid rgba(123,110,246,0.4)',
+              background: loading
+                ? 'rgba(123,110,246,0.4)'
+                : 'linear-gradient(135deg, #7b6ef6 0%, #5956e9 100%)',
+              color: '#fff',
+              fontSize: '14px',
+              fontWeight: 700,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)',
+              boxShadow: '0 4px 24px rgba(123,110,246,0.35), inset 0 1px 0 rgba(255,255,255,0.2)',
+              fontFamily: '"Plus Jakarta Sans", sans-serif',
+              letterSpacing: '-0.2px',
+              opacity: loading ? 0.75 : 1,
+            }}>
               {loading ? (
                 <>
-                  <svg className="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  <svg style={{ animation: 'spinLoader 0.8s linear infinite', width: 16, height: 16 }} fill="none" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" strokeWidth="3" />
+                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  Creating Account...
+                  Creating your account…
                 </>
               ) : (
-                'Sign Up'
+                <>
+                  Get started free
+                  <ArrowRight size={16} />
+                </>
               )}
             </button>
           </form>
 
-          {/* Bottom link */}
-          <p className="text-center text-xs text-slate-400 mt-5">
-            Already have an account?
-            <Link to="/login" className="text-[#7b6ef6] font-bold hover:underline ml-1">Log in</Link>
+          {/* Bottom links */}
+          <p style={{ textAlign: 'center', fontSize: '12.5px', color: 'rgba(255,255,255,0.35)', marginTop: '18px' }}>
+            Already have an account?{' '}
+            <Link to="/login" style={{ color: '#a78bfa', fontWeight: 700, textDecoration: 'none' }}>Sign in</Link>
           </p>
-
-          {/* Terms */}
-          <p className="text-[9px] text-center text-slate-500 leading-normal mt-5 select-text">
-            By signing up, you agree to our{' '}
-            <a href="#" className="text-[#7b6ef6] hover:underline">Terms of Service</a>
+          <p style={{ textAlign: 'center', fontSize: '10px', color: 'rgba(255,255,255,0.18)', marginTop: '10px', lineHeight: 1.7 }}>
+            By continuing, you agree to our{' '}
+            <a href="#" style={{ color: 'rgba(167,139,250,0.6)', textDecoration: 'none' }}>Terms</a>
             {' '}and{' '}
-            <a href="#" className="text-[#7b6ef6] hover:underline">Privacy Policy</a>.
+            <a href="#" style={{ color: 'rgba(167,139,250,0.6)', textDecoration: 'none' }}>Privacy Policy</a>.
           </p>
         </div>
       </div>
+      
+      {/* Mobile-only: hide left panel */}
+      <style>{`
+        @media (max-width: 700px) {
+          .reg-left-panel { display: none !important; }
+        }
+      `}</style>
     </div>
   );
 };

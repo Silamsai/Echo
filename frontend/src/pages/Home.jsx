@@ -1,23 +1,33 @@
-import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import ChatWindow from '../components/ChatWindow';
 import ChatIllustration from '../components/ChatIllustration';
 import useChatStore from '../store/chatStore';
 import useSocket from '../hooks/useSocket';
 
+const MIN_W = 200;
+const MAX_W = 450;
+
 const Home = () => {
   const [activeConversation, setActiveConversation] = useState(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(true);
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const saved = localStorage.getItem('sidebarWidth');
+    return saved ? parseInt(saved, 10) : 260;
+  });
+  const [isResizing, setIsResizing] = useState(false);
+
+  const containerRef = useRef(null);
+  const dragStartX = useRef(0);
+  const dragStartW = useRef(0);
+
   const { setActiveConversation: storeSetActive } = useChatStore();
 
-  // Register all socket listeners globally
   useSocket();
 
   const handleSelectConversation = (conv) => {
     setActiveConversation(conv);
     storeSetActive(conv);
-    // On mobile: close sidebar and show chat
     setMobileSidebarOpen(false);
   };
 
@@ -25,26 +35,74 @@ const Home = () => {
     setMobileSidebarOpen(true);
   };
 
+  /* ── Drag logic ── */
+  const onMouseDown = useCallback((e) => {
+    e.preventDefault();
+    dragStartX.current = e.clientX;
+    dragStartW.current = sidebarWidth;
+    setIsResizing(true);
+  }, [sidebarWidth]);
+
+  const onMouseMove = useCallback((e) => {
+    if (!isResizing) return;
+    const delta = e.clientX - dragStartX.current;
+    const newW = Math.min(MAX_W, Math.max(MIN_W, dragStartW.current + delta));
+    setSidebarWidth(newW);
+  }, [isResizing]);
+
+  const onMouseUp = useCallback(() => {
+    if (!isResizing) return;
+    setIsResizing(false);
+    localStorage.setItem('sidebarWidth', sidebarWidth);
+  }, [isResizing, sidebarWidth]);
+
+  useEffect(() => {
+    if (isResizing) {
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    } else {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [isResizing, onMouseMove, onMouseUp]);
+
   return (
-    <div className="flex h-full overflow-hidden relative">
+    <div ref={containerRef} className="flex h-full overflow-hidden relative">
+
       {/* ── SIDEBAR ──
-          Desktop: always visible (w-auto)
-          Mobile: full-screen overlay, toggled by mobileSidebarOpen
+          Desktop: fixed width set by drag state
+          Mobile: full-screen overlay toggled by mobileSidebarOpen
       */}
       <div
         className={`
           flex-shrink-0 h-full z-20
-          md:relative md:flex md:w-auto
+          md:relative md:flex
           absolute inset-0
           transition-transform duration-300 ease-in-out
           ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
+        style={{ width: window.innerWidth >= 768 ? sidebarWidth : undefined }}
       >
         <Sidebar
           onSelectConversation={handleSelectConversation}
           activeConversation={activeConversation}
         />
       </div>
+
+      {/* ── RESIZE HANDLE (desktop only) ── */}
+      <div
+        className={`hidden md:flex resize-handle ${isResizing ? 'active' : ''}`}
+        onMouseDown={onMouseDown}
+        title="Drag to resize"
+      />
 
       {/* ── MAIN CONTENT AREA ── */}
       <div
@@ -63,7 +121,6 @@ const Home = () => {
             />
           </div>
         ) : (
-          /* Empty state — desktop only (mobile always shows sidebar first) */
           <div className="flex-1 hidden md:flex overflow-hidden">
             <ChatIllustration />
           </div>

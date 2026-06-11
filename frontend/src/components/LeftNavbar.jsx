@@ -9,7 +9,7 @@ const EchoMark = ({ size = 28 }) => (
   <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
     <defs>
       <linearGradient id="nav-logo-g" x1="20%" y1="10%" x2="80%" y2="90%">
-        <stop offset="0%" stopColor="#6eb5ff" />
+        <stop offset="0%" stopColor="#c4b5fd" />
         <stop offset="50%" stopColor="#7b6ef6" />
         <stop offset="100%" stopColor="#5956e9" />
       </linearGradient>
@@ -18,6 +18,79 @@ const EchoMark = ({ size = 28 }) => (
     <path d="M50 34C38.4 34 29 43.4 29 55C29 66.6 38.4 76 50 76C58.6 76 66 71 69.2 63.6L57.8 63.6C55.6 66.9 53 68 50 68C44.4 68 39.8 63.8 39 58L71 58C71 57 71 56 71 55C71 43.4 61.6 34 50 34ZM50 42C54 42 57.2 44.8 58.6 48.6L41.4 48.6C42.8 44.8 46 42 50 42Z" fill="#ffffff" />
   </svg>
 );
+
+const NavButton = ({ item, isActive, onClick }) => {
+  const Icon = item.icon;
+  return (
+    <button
+      key={item.key}
+      onClick={onClick}
+      title={item.label}
+      style={{
+        position: 'relative',
+        width: '46px',
+        height: '46px',
+        borderRadius: '14px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        border: isActive
+          ? '1px solid rgba(123,110,246,0.35)'
+          : '1px solid transparent',
+        background: isActive
+          ? 'linear-gradient(135deg, rgba(123,110,246,0.18) 0%, rgba(89,86,233,0.12) 100%)'
+          : 'transparent',
+        color: isActive ? '#a78bfa' : 'rgba(255,255,255,0.35)',
+        transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+        boxShadow: isActive ? '0 0 20px rgba(123,110,246,0.2), inset 0 1px 0 rgba(255,255,255,0.1)' : 'none',
+        fontFamily: 'inherit',
+        outline: 'none',
+      }}
+      className="ln-nav-btn"
+    >
+      {Icon && <Icon size={19} />}
+
+      {/* Badge */}
+      {item.badge > 0 && (
+        <span style={{
+          position: 'absolute',
+          top: '9px',
+          right: '9px',
+          width: '7px',
+          height: '7px',
+          background: '#f87171',
+          borderRadius: '50%',
+          boxShadow: '0 0 6px rgba(248,113,113,0.6)',
+        }} />
+      )}
+
+      {/* Tooltip */}
+      <div style={{
+        position: 'absolute',
+        left: 'calc(100% + 12px)',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        background: 'rgba(15,15,22,0.95)',
+        backdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        color: 'rgba(255,255,255,0.85)',
+        fontSize: '11px',
+        fontWeight: 600,
+        padding: '5px 10px',
+        borderRadius: '8px',
+        whiteSpace: 'nowrap',
+        pointerEvents: 'none',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+        opacity: 0,
+        transition: 'opacity 0.15s',
+        zIndex: 100,
+      }} className="ln-tooltip">
+        {item.label}
+      </div>
+    </button>
+  );
+};
 
 const LeftNavbar = () => {
   const { user, logout } = useAuthStore();
@@ -32,47 +105,12 @@ const LeftNavbar = () => {
   };
 
   const navItems = [
-    {
-      key: 'chats',
-      icon: MessageSquare,
-      path: '/',
-      label: 'Chats',
-    },
-    {
-      key: 'search',
-      icon: Search,
-      path: '/search',
-      label: 'Search',
-    },
-    {
-      key: 'requests',
-      icon: Bell,
-      path: '/notifications',
-      label: 'Requests',
-      badge: unreadCount,
-    },
-    {
-      key: 'profile',
-      icon: User,
-      path: '/profile',
-      label: 'Profile',
-    },
-    {
-      key: 'settings',
-      icon: Settings,
-      path: '/settings',
-      label: 'Settings',
-    },
-    ...(user?.isAdmin
-      ? [
-          {
-            key: 'admin',
-            icon: Shield,
-            path: '/admin',
-            label: 'Admin',
-          },
-        ]
-      : []),
+    { key: 'chats', icon: MessageSquare, path: '/', label: 'Chats' },
+    { key: 'search', icon: Search, path: '/search', label: 'Search' },
+    { key: 'requests', icon: Bell, path: '/notifications', label: 'Requests', badge: unreadCount },
+    { key: 'profile', icon: User, path: '/profile', label: 'Profile' },
+    { key: 'settings', icon: Settings, path: '/settings', label: 'Settings' },
+    ...(user?.isAdmin ? [{ key: 'admin', icon: Shield, path: '/admin', label: 'Admin' }] : []),
   ];
 
   const getAvatar = () =>
@@ -83,73 +121,122 @@ const LeftNavbar = () => {
 
   return (
     <>
-      {/* ─── DESKTOP SIDEBAR RAIL ─── */}
-      <div className="hidden md:flex flex-col items-center justify-between py-6 w-[76px] h-full bg-[#0b0b13] border-r border-white/5 select-none flex-shrink-0">
-        
-        {/* App Logo */}
-        <div className="cursor-pointer hover:scale-105 active:scale-95 transition-all duration-150" onClick={() => navigate('/')}>
+      <style>{`
+        .ln-nav-btn:hover {
+          background: rgba(255,255,255,0.06) !important;
+          color: rgba(255,255,255,0.7) !important;
+          border-color: rgba(255,255,255,0.1) !important;
+          transform: translateY(-1px);
+        }
+        .ln-nav-btn:hover .ln-tooltip {
+          opacity: 1 !important;
+        }
+        .ln-nav-btn:active {
+          transform: scale(0.93) !important;
+        }
+        .ln-avatar-wrap:hover {
+          border-color: rgba(123,110,246,0.5) !important;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 16px rgba(123,110,246,0.25) !important;
+        }
+        .ln-logout-btn:hover {
+          color: #f87171 !important;
+          background: rgba(248,113,113,0.08) !important;
+        }
+        .ln-mob-btn:hover { color: rgba(255,255,255,0.7) !important; }
+      `}</style>
+
+      {/* ─── DESKTOP RAIL ─── */}
+      <div style={{
+        display: 'none',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '20px 0',
+        width: '72px',
+        height: '100%',
+        background: 'rgba(8,8,14,0.92)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderRight: '1px solid rgba(255,255,255,0.06)',
+        flexShrink: 0,
+        userSelect: 'none',
+        position: 'relative',
+        zIndex: 30,
+      }} className="ln-desktop">
+
+        {/* Subtle glow behind rail */}
+        <div style={{
+          position: 'absolute',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'linear-gradient(180deg, rgba(123,110,246,0.04) 0%, transparent 40%, rgba(123,110,246,0.03) 100%)',
+          pointerEvents: 'none',
+        }} />
+
+        {/* Logo */}
+        <div
+          onClick={() => navigate('/')}
+          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', position: 'relative', zIndex: 1 }}
+        >
           {config?.logoUrl ? (
-            <img
-              src={config.logoUrl}
-              alt="Logo"
-              className="w-9 h-9 rounded-xl object-contain"
-            />
+            <img src={config.logoUrl} alt="Logo" style={{ width: '34px', height: '34px', borderRadius: '10px', objectFit: 'contain' }} />
           ) : (
             <EchoMark size={32} />
           )}
         </div>
 
-        {/* Navigation Icons */}
-        <div className="flex flex-col gap-5 w-full px-2">
+        {/* Nav items */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', width: '100%', padding: '0 12px', position: 'relative', zIndex: 1 }}>
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             const CustomIconUrl = config?.sidebarIcons?.[item.key];
-            const Icon = item.icon;
+            const Icon = CustomIconUrl ? null : item.icon;
+            const customItem = CustomIconUrl ? { ...item, icon: null } : item;
 
             return (
-              <button
+              <NavButton
                 key={item.key}
+                item={customItem}
+                isActive={isActive}
                 onClick={() => navigate(item.path)}
-                className={`relative group w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer ${
-                  isActive
-                    ? 'bg-gradient-to-tr from-[#7b6ef6]/15 to-[#5956e9]/15 border border-[#7b6ef6]/30 text-white shadow-[0_0_15px_rgba(123,110,246,0.15)]'
-                    : 'border border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/5'
-                }`}
-                title={item.label}
-              >
-                {CustomIconUrl ? (
-                  <img
-                    src={CustomIconUrl}
-                    alt={item.label}
-                    className="w-5 h-5 object-contain"
-                  />
-                ) : (
-                  <Icon size={20} className={isActive ? 'text-[#7b6ef6]' : ''} />
-                )}
-
-                {/* Badge */}
-                {item.badge > 0 && (
-                  <span className="absolute top-2.5 right-2.5 min-w-[7px] min-h-[7px] bg-red-500 rounded-full" />
-                )}
-
-                {/* Tooltip */}
-                <div className="absolute left-[70px] bg-[#1a1a24] text-white text-[10px] font-semibold py-1.5 px-3 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg border border-white/5 z-50">
-                  {item.label}
-                </div>
-              </button>
+              />
             );
           })}
         </div>
 
-        {/* User profile avatar & Logout */}
-        <div className="flex flex-col gap-4 items-center">
-          <div className="w-9 h-9 rounded-xl overflow-hidden border border-white/10 cursor-pointer hover:border-indigo-500/50 transition-colors" onClick={() => navigate('/profile')}>
-            <img src={getAvatar()} alt="" className="w-full h-full object-cover" />
+        {/* Bottom: avatar + logout */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', position: 'relative', zIndex: 1 }}>
+          {/* Avatar */}
+          <div
+            onClick={() => navigate('/profile')}
+            className="ln-avatar-wrap"
+            style={{
+              width: '36px', height: '36px', borderRadius: '11px',
+              overflow: 'hidden',
+              border: '1.5px solid rgba(255,255,255,0.1)',
+              cursor: 'pointer',
+              transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+            }}
+          >
+            <img src={getAvatar()} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
+
+          {/* Logout */}
           <button
             onClick={handleLogout}
-            className="w-10 h-10 rounded-xl flex items-center justify-center border border-transparent text-slate-500 hover:text-red-400 hover:bg-red-500/5 transition-all cursor-pointer"
             title="Logout"
+            className="ln-logout-btn"
+            style={{
+              width: '36px', height: '36px', borderRadius: '11px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: '1px solid transparent',
+              background: 'transparent',
+              color: 'rgba(255,255,255,0.25)',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              fontFamily: 'inherit',
+            }}
           >
             <LogOut size={16} />
           </button>
@@ -158,7 +245,21 @@ const LeftNavbar = () => {
 
       {/* ─── MOBILE BOTTOM BAR ─── */}
       {showMobileBottomBar && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 h-[64px] bg-[#0b0b13]/95 backdrop-blur-md border-t border-white/5 flex items-center justify-around px-4 z-40 select-none">
+        <div style={{
+          position: 'fixed',
+          bottom: 0, left: 0, right: 0,
+          height: '64px',
+          background: 'rgba(8,8,14,0.96)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-around',
+          padding: '0 8px',
+          zIndex: 40,
+          userSelect: 'none',
+        }} className="ln-mobile">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             const CustomIconUrl = config?.sidebarIcons?.[item.key];
@@ -168,30 +269,46 @@ const LeftNavbar = () => {
               <button
                 key={item.key}
                 onClick={() => navigate(item.path)}
-                className={`relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 ${
-                  isActive ? 'text-[#7b6ef6] scale-105' : 'text-slate-400'
-                }`}
+                className="ln-mob-btn"
+                style={{
+                  position: 'relative',
+                  width: '48px', height: '48px',
+                  borderRadius: '14px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: isActive ? 'rgba(123,110,246,0.12)' : 'transparent',
+                  border: isActive ? '1px solid rgba(123,110,246,0.25)' : '1px solid transparent',
+                  color: isActive ? '#a78bfa' : 'rgba(255,255,255,0.35)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                  fontFamily: 'inherit',
+                  outline: 'none',
+                  transform: isActive ? 'translateY(-2px)' : 'none',
+                }}
               >
                 {CustomIconUrl ? (
-                  <img
-                    src={CustomIconUrl}
-                    alt={item.label}
-                    className="w-5 h-5 object-contain"
-                    style={{ filter: isActive ? 'none' : 'grayscale(1) opacity(0.6)' }}
-                  />
+                  <img src={CustomIconUrl} alt={item.label} style={{ width: '20px', height: '20px', objectFit: 'contain', filter: isActive ? 'none' : 'grayscale(1) opacity(0.5)' }} />
                 ) : (
                   <Icon size={20} />
                 )}
-
-                {/* Badge */}
                 {item.badge > 0 && (
-                  <span className="absolute top-3.5 right-3.5 min-w-[7px] min-h-[7px] bg-red-500 rounded-full" />
+                  <span style={{ position: 'absolute', top: '10px', right: '10px', width: '7px', height: '7px', background: '#f87171', borderRadius: '50%', boxShadow: '0 0 6px rgba(248,113,113,0.6)' }} />
                 )}
               </button>
             );
           })}
         </div>
       )}
+
+      {/* Show desktop only on md+ */}
+      <style>{`
+        @media (min-width: 768px) {
+          .ln-desktop { display: flex !important; }
+          .ln-mobile  { display: none !important; }
+        }
+        @media (max-width: 767px) {
+          .ln-desktop { display: none !important; }
+        }
+      `}</style>
     </>
   );
 };

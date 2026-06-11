@@ -29,7 +29,7 @@ const ProtectedLayout = ({ children }) => {
   if (!user) return <Navigate to="/login" replace />;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#0a0a0f] text-[#e8e6ff]">
+    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg-app)', color: 'var(--text-primary)' }}>
       {/* Dynamic Sidebar / Nav rail */}
       <LeftNavbar />
       
@@ -51,13 +51,17 @@ const App = () => {
     initialize();
     fetchConfig(); // Load branding & features config
     
-    // Initialize theme, default to dark
+    // Initialize theme – apply light class when needed
     const theme = localStorage.getItem('theme') || 'dark';
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
+    const chatTheme = localStorage.getItem('chatTheme') || 'midnight';
+    if (theme === 'light') {
+      document.documentElement.classList.add('light');
       document.documentElement.classList.remove('dark');
+    } else {
+      document.documentElement.classList.remove('light');
+      document.documentElement.classList.add('dark');
     }
+    document.documentElement.dataset.chatTheme = chatTheme;
   }, [initialize, fetchConfig]);
 
   if (!isInitialized) {
