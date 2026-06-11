@@ -125,17 +125,23 @@ const Register = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      width: '100vw',
+      width: '100%',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       padding: '24px',
-      overflow: 'auto',
+      paddingTop: 'max(24px, env(safe-area-inset-top))',
+      paddingBottom: 'max(24px, env(safe-area-inset-bottom))',
+      paddingLeft: 'max(16px, env(safe-area-inset-left))',
+      paddingRight: 'max(16px, env(safe-area-inset-right))',
+      overflowX: 'hidden',
+      overflowY: 'auto',
       background: '#050508',
       position: 'relative',
       fontFamily: '"Plus Jakarta Sans", -apple-system, sans-serif',
     }}>
       <style>{`
+        *, *::before, *::after { box-sizing: border-box; }
         @keyframes liquidOrb {
           0%, 100% { transform: translate(0, 0) scale(1); }
           33% { transform: translate(30px, -20px) scale(1.05); }
@@ -171,11 +177,12 @@ const Register = () => {
         }
         .reg-input {
           flex: 1;
+          min-width: 0;
           background: transparent;
           border: none;
           outline: none;
           color: #f0eeff;
-          font-size: 13px;
+          font-size: 14px;
           font-family: "Plus Jakarta Sans", sans-serif;
           font-weight: 500;
         }
@@ -198,6 +205,30 @@ const Register = () => {
           opacity: 0;
         }
         .feature-left-item:hover { background: rgba(255,255,255,0.04); }
+        /* ── Mobile: hide left decorative panel ── */
+        @media (max-width: 700px) {
+          .reg-left-panel { display: none !important; }
+          .reg-card {
+            border-radius: 20px !important;
+            margin: 0 !important;
+          }
+          .reg-right-panel {
+            padding: 32px 20px 28px !important;
+            min-height: unset !important;
+          }
+          .reg-pw-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .reg-input {
+            font-size: 16px !important; /* prevents iOS zoom */
+          }
+        }
+        /* ── Very small phones ── */
+        @media (max-width: 380px) {
+          .reg-right-panel {
+            padding: 24px 16px 22px !important;
+          }
+        }
       `}</style>
 
       {/* Liquid orbs */}
@@ -206,7 +237,7 @@ const Register = () => {
       <LiquidOrb style={{ width: 350, height: 350, background: 'radial-gradient(circle, rgba(110,181,255,0.1) 0%, transparent 70%)', top: '40%', right: '20%', animation: 'liquidOrb3 10s ease-in-out infinite' }} />
 
       {/* Glass card */}
-      <div ref={cardRef} style={{
+      <div ref={cardRef} className="reg-card" style={{
         width: '100%',
         maxWidth: '900px',
         display: 'flex',
@@ -299,7 +330,7 @@ const Register = () => {
         </div>
 
         {/* RIGHT PANEL — Form */}
-        <div style={{ flex: 1, padding: '44px 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'rgba(0,0,0,0.25)', minHeight: '580px' }}>
+        <div className="reg-right-panel" style={{ flex: 1, padding: '44px 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'rgba(0,0,0,0.25)', minHeight: '580px' }}>
           
           <div style={{ marginBottom: '28px' }}>
             <h1 style={{ color: '#fff', fontSize: '22px', fontWeight: 800, letterSpacing: '-0.5px', margin: 0 }}>Create account</h1>
@@ -370,7 +401,7 @@ const Register = () => {
             </div>
 
             {/* Passwords row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div className="reg-pw-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
                 <label style={{ display: 'block', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px', fontFamily: 'monospace' }}>Password</label>
                 <div style={getFieldStyle('password')}>
@@ -458,12 +489,7 @@ const Register = () => {
         </div>
       </div>
       
-      {/* Mobile-only: hide left panel */}
-      <style>{`
-        @media (max-width: 700px) {
-          .reg-left-panel { display: none !important; }
-        }
-      `}</style>
+
     </div>
   );
 };
