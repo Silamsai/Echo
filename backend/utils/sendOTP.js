@@ -33,7 +33,7 @@ const sendOTPEmail = async (email, otp, username) => {
   const mailOptions = {
     from: fromAddress,
     to: email,
-    subject: 'Your ECHO Verification Code: ' + otp,
+    subject: 'Your ECHO Verification Code',
     text: `Hey ${username} 👋\n\nWelcome to ECHO! Use the verification code below to complete your registration:\n\n${otp}\n\nThis code expires in 10 minutes.\n\nIf you didn't request this, you can safely ignore this email.\nNever share this code with anyone.\n\n© 2026 ECHO. All rights reserved.\n${physicalAddress}`,
     html: `
       <!DOCTYPE html>
@@ -88,12 +88,7 @@ const sendOTPEmail = async (email, otp, username) => {
         </table>
       </body>
       </html>
-    `,
-    headers: {
-      'X-Entity-Ref-ID': otp,
-      'X-Priority': '1',
-      'Importance': 'high'
-    }
+    `
   };
 
   await transporter.sendMail(mailOptions);
@@ -106,7 +101,7 @@ const sendResetEmail = async (email, code, username) => {
   const mailOptions = {
     from: fromAddress,
     to: email,
-    subject: 'Reset your ECHO Password: ' + code,
+    subject: 'Reset your ECHO Password',
     text: `Hey ${username} 👋\n\nWe received a request to reset your password. Use the verification code below to reset it:\n\n${code}\n\nThis code expires in 10 minutes.\n\nIf you didn't request this, you can safely ignore this email.\nNever share this code with anyone.\n\n© 2026 ECHO. All rights reserved.\n${physicalAddress}`,
     html: `
       <!DOCTYPE html>
@@ -161,12 +156,7 @@ const sendResetEmail = async (email, code, username) => {
         </table>
       </body>
       </html>
-    `,
-    headers: {
-      'X-Entity-Ref-ID': code,
-      'X-Priority': '1',
-      'Importance': 'high'
-    }
+    `
   };
 
   await transporter.sendMail(mailOptions);
