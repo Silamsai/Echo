@@ -33,8 +33,8 @@ const sendOTPEmail = async (email, otp, username) => {
   const mailOptions = {
     from: fromAddress,
     to: email,
-    subject: 'Your ECHO Verification Code',
-    text: `Hey ${username} 👋\n\nWelcome to ECHO! Use the verification code below to complete your registration:\n\n${otp}\n\nThis code expires in 10 minutes.\n\nIf you didn't request this, you can safely ignore this email.\nNever share this code with anyone.\n\n© 2024 ECHO. All rights reserved.\n${physicalAddress}`,
+    subject: 'Your ECHO Verification Code: ' + otp,
+    text: `Hey ${username} 👋\n\nWelcome to ECHO! Use the verification code below to complete your registration:\n\n${otp}\n\nThis code expires in 10 minutes.\n\nIf you didn't request this, you can safely ignore this email.\nNever share this code with anyone.\n\n© 2026 ECHO. All rights reserved.\n${physicalAddress}`,
     html: `
       <!DOCTYPE html>
       <html>
@@ -43,44 +43,43 @@ const sendOTPEmail = async (email, otp, username) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>ECHO OTP Verification</title>
       </head>
-      <body style="margin:0;padding:0;background-color:#0a0a0f;font-family:'Segoe UI',Arial,sans-serif;">
-        <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0a0a0f;padding:40px 0;">
+      <body style="margin:0;padding:0;background-color:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8fafc;padding:32px 0;">
           <tr>
             <td align="center">
-              <table width="500" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);border-radius:16px;overflow:hidden;border:1px solid rgba(99,102,241,0.3);">
+              <table width="100%" max-width="480" style="max-width:480px;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05),0 2px 4px -1px rgba(0,0,0,0.03);margin:0 auto;text-align:left;">
                 <!-- Header -->
                 <tr>
-                  <td align="center" style="padding:40px 40px 20px;">
-                    <div style="font-size:36px;font-weight:900;letter-spacing:8px;color:#ffffff;">
-                      <span style="background:linear-gradient(135deg,#6366f1,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">ECHO</span>
-                    </div>
-                    <div style="color:#94a3b8;font-size:13px;letter-spacing:3px;margin-top:4px;">REAL-TIME CHAT</div>
+                  <td style="padding:32px 32px 20px;border-bottom:1px solid #f1f5f9;">
+                    <span style="font-size:24px;font-weight:800;letter-spacing:-0.5px;color:#4f46e5;font-family:-apple-system,BlinkMacSystemFont,sans-serif;">ECHO</span>
+                    <span style="font-size:10px;font-weight:600;letter-spacing:1px;color:#64748b;margin-left:8px;vertical-align:middle;text-transform:uppercase;">Real-Time Chat</span>
                   </td>
                 </tr>
                 <!-- Body -->
                 <tr>
-                  <td style="padding:20px 40px 40px;">
-                    <p style="color:#e2e8f0;font-size:18px;margin:0 0 8px;">Hey <strong>${username}</strong> 👋</p>
-                    <p style="color:#94a3b8;font-size:14px;line-height:1.6;margin:0 0 32px;">
-                      Welcome to ECHO! Use the verification code below to complete your registration. 
-                      This code expires in <strong style="color:#6366f1;">10 minutes</strong>.
+                  <td style="padding:32px;">
+                    <p style="color:#1e293b;font-size:16px;font-weight:600;margin:0 0 16px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;">Hey ${username} 👋</p>
+                    <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 24px;">
+                      Welcome to ECHO! Please verify your email address to activate your account. Use the 6-digit verification code below:
                     </p>
                     <!-- OTP Box -->
-                    <div style="background:rgba(99,102,241,0.1);border:2px solid rgba(99,102,241,0.4);border-radius:12px;padding:24px;text-align:center;margin-bottom:32px;">
-                      <div style="font-size:13px;color:#94a3b8;letter-spacing:2px;margin-bottom:12px;">VERIFICATION CODE</div>
-                      <div style="font-size:48px;font-weight:800;letter-spacing:16px;color:#ffffff;font-family:'Courier New',monospace;">${otp}</div>
+                    <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:20px;text-align:center;margin-bottom:24px;">
+                      <div style="font-size:11px;color:#64748b;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">Verification Code</div>
+                      <div style="font-size:36px;font-weight:800;letter-spacing:8px;color:#0f172a;font-family:'Courier New',Courier,monospace;">${otp}</div>
                     </div>
-                    <p style="color:#64748b;font-size:12px;text-align:center;margin:0;">
-                      If you didn't request this, you can safely ignore this email.<br>
-                      Never share this code with anyone.
+                    <p style="color:#475569;font-size:13px;line-height:1.5;margin:0 0 8px;">
+                      This verification code will expire in <strong style="color:#0f172a;">10 minutes</strong>.
+                    </p>
+                    <p style="color:#64748b;font-size:12px;line-height:1.5;margin:0;">
+                      If you did not sign up for an account with ECHO, you can safely ignore this email.
                     </p>
                   </td>
                 </tr>
                 <!-- Footer -->
                 <tr>
-                  <td style="background:rgba(0,0,0,0.3);padding:24px 40px;text-align:center;">
-                    <p style="color:#475569;font-size:11px;margin:0 0 8px;">© 2024 ECHO. All rights reserved.</p>
-                    <p style="color:#475569;font-size:10px;margin:0;line-height:1.4;">${physicalAddress}</p>
+                  <td style="background-color:#f8fafc;padding:24px 32px;border-top:1px solid #e2e8f0;text-align:center;">
+                    <p style="color:#64748b;font-size:11px;margin:0 0 6px;">© 2026 ECHO. All rights reserved.</p>
+                    <p style="color:#94a3b8;font-size:10px;margin:0;line-height:1.4;">${physicalAddress}</p>
                   </td>
                 </tr>
               </table>
@@ -92,7 +91,8 @@ const sendOTPEmail = async (email, otp, username) => {
     `,
     headers: {
       'X-Entity-Ref-ID': otp,
-      'Precedence': 'bulk'
+      'X-Priority': '1',
+      'Importance': 'high'
     }
   };
 
@@ -106,8 +106,8 @@ const sendResetEmail = async (email, code, username) => {
   const mailOptions = {
     from: fromAddress,
     to: email,
-    subject: 'Reset your ECHO Password',
-    text: `Hey ${username} 👋\n\nWe received a request to reset your password. Use the verification code below to reset it:\n\n${code}\n\nThis code expires in 10 minutes.\n\nIf you didn't request this, you can safely ignore this email.\nNever share this code with anyone.\n\n© 2024 ECHO. All rights reserved.\n${physicalAddress}`,
+    subject: 'Reset your ECHO Password: ' + code,
+    text: `Hey ${username} 👋\n\nWe received a request to reset your password. Use the verification code below to reset it:\n\n${code}\n\nThis code expires in 10 minutes.\n\nIf you didn't request this, you can safely ignore this email.\nNever share this code with anyone.\n\n© 2026 ECHO. All rights reserved.\n${physicalAddress}`,
     html: `
       <!DOCTYPE html>
       <html>
@@ -116,44 +116,43 @@ const sendResetEmail = async (email, code, username) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>ECHO Password Reset</title>
       </head>
-      <body style="margin:0;padding:0;background-color:#0a0a0f;font-family:'Segoe UI',Arial,sans-serif;">
-        <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0a0a0f;padding:40px 0;">
+      <body style="margin:0;padding:0;background-color:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8fafc;padding:32px 0;">
           <tr>
             <td align="center">
-              <table width="500" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);border-radius:16px;overflow:hidden;border:1px solid rgba(239,68,68,0.3);">
+              <table width="100%" max-width="480" style="max-width:480px;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05),0 2px 4px -1px rgba(0,0,0,0.03);margin:0 auto;text-align:left;">
                 <!-- Header -->
                 <tr>
-                  <td align="center" style="padding:40px 40px 20px;">
-                    <div style="font-size:36px;font-weight:900;letter-spacing:8px;color:#ffffff;">
-                      <span style="background:linear-gradient(135deg,#ef4444,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">ECHO</span>
-                    </div>
-                    <div style="color:#94a3b8;font-size:13px;letter-spacing:3px;margin-top:4px;">PASSWORD RESET</div>
+                  <td style="padding:32px 32px 20px;border-bottom:1px solid #f1f5f9;">
+                    <span style="font-size:24px;font-weight:800;letter-spacing:-0.5px;color:#dc2626;font-family:-apple-system,BlinkMacSystemFont,sans-serif;">ECHO</span>
+                    <span style="font-size:10px;font-weight:600;letter-spacing:1px;color:#64748b;margin-left:8px;vertical-align:middle;text-transform:uppercase;">Password Reset</span>
                   </td>
                 </tr>
                 <!-- Body -->
                 <tr>
-                  <td style="padding:20px 40px 40px;">
-                    <p style="color:#e2e8f0;font-size:18px;margin:0 0 8px;">Hey <strong>${username}</strong> 👋</p>
-                    <p style="color:#94a3b8;font-size:14px;line-height:1.6;margin:0 0 32px;">
-                      We received a request to reset your password. Use the verification code below to complete the reset process.
-                      This code expires in <strong style="color:#ef4444;">10 minutes</strong>.
+                  <td style="padding:32px;">
+                    <p style="color:#1e293b;font-size:16px;font-weight:600;margin:0 0 16px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;">Hey ${username} 👋</p>
+                    <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 24px;">
+                      We received a request to reset your password. Use the verification code below to complete the reset process:
                     </p>
                     <!-- OTP Box -->
-                    <div style="background:rgba(239,68,68,0.1);border:2px solid rgba(239,68,68,0.4);border-radius:12px;padding:24px;text-align:center;margin-bottom:32px;">
-                      <div style="font-size:13px;color:#94a3b8;letter-spacing:2px;margin-bottom:12px;">RESET CODE</div>
-                      <div style="font-size:48px;font-weight:800;letter-spacing:16px;color:#ffffff;font-family:'Courier New',monospace;">${code}</div>
+                    <div style="background-color:#fdf2f2;border:1px solid #fde2e2;border-radius:8px;padding:20px;text-align:center;margin-bottom:24px;">
+                      <div style="font-size:11px;color:#b91c1c;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">Reset Code</div>
+                      <div style="font-size:36px;font-weight:800;letter-spacing:8px;color:#991b1b;font-family:'Courier New',Courier,monospace;">${code}</div>
                     </div>
-                    <p style="color:#64748b;font-size:12px;text-align:center;margin:0;">
-                      If you didn't request this, you can safely ignore this email and your password will remain unchanged.<br>
-                      Never share this code with anyone.
+                    <p style="color:#475569;font-size:13px;line-height:1.5;margin:0 0 8px;">
+                      This password reset code will expire in <strong style="color:#0f172a;">10 minutes</strong>.
+                    </p>
+                    <p style="color:#64748b;font-size:12px;line-height:1.5;margin:0;">
+                      If you did not request a password reset, you can safely ignore this email. Your password will remain unchanged.
                     </p>
                   </td>
                 </tr>
                 <!-- Footer -->
                 <tr>
-                  <td style="background:rgba(0,0,0,0.3);padding:24px 40px;text-align:center;">
-                    <p style="color:#475569;font-size:11px;margin:0 0 8px;">© 2024 ECHO. All rights reserved.</p>
-                    <p style="color:#475569;font-size:10px;margin:0;line-height:1.4;">${physicalAddress}</p>
+                  <td style="background-color:#f8fafc;padding:24px 32px;border-top:1px solid #e2e8f0;text-align:center;">
+                    <p style="color:#64748b;font-size:11px;margin:0 0 6px;">© 2026 ECHO. All rights reserved.</p>
+                    <p style="color:#94a3b8;font-size:10px;margin:0;line-height:1.4;">${physicalAddress}</p>
                   </td>
                 </tr>
               </table>
@@ -165,7 +164,8 @@ const sendResetEmail = async (email, code, username) => {
     `,
     headers: {
       'X-Entity-Ref-ID': code,
-      'Precedence': 'bulk'
+      'X-Priority': '1',
+      'Importance': 'high'
     }
   };
 
@@ -173,4 +173,3 @@ const sendResetEmail = async (email, code, username) => {
 };
 
 module.exports = { sendOTPEmail, sendResetEmail };
-
