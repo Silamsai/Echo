@@ -30,8 +30,8 @@ const register = async (req, res) => {
     const existingUsername = await User.findOne({ username: { $regex: new RegExp(`^${usernameLower}$`, 'i') } });
     if (existingUsername) return res.status(409).json({ message: 'Username already taken.' });
 
-    // Hash password
-    const passwordHash = await bcrypt.hash(password, 12);
+    // Hash password (10 rounds is faster & secure)
+    const passwordHash = await bcrypt.hash(password, 10);
 
     // Check configuration
     let config = await AppConfig.findOne({ key: 'main_config' });
@@ -76,8 +76,10 @@ const register = async (req, res) => {
       pendingData: { username: usernameLower, passwordHash },
     });
 
-    // Send OTP email
-    await sendOTPEmail(emailLower, otp, username);
+    // Send OTP email in background to avoid blocking API response
+    sendOTPEmail(emailLower, otp, username).catch(err => {
+      console.error('Failed to send registration OTP email in background:', err);
+    });
 
     res.status(200).json({ message: 'OTP sent to your email. Please verify to complete registration.' });
   } catch (err) {
@@ -144,7 +146,10 @@ const resendOTP = async (req, res) => {
     otpRecord.createdAt = new Date();
     await otpRecord.save();
 
-    await sendOTPEmail(emailLower, otp, otpRecord.pendingData.username);
+    // Send in background to avoid blocking API response
+    sendOTPEmail(emailLower, otp, otpRecord.pendingData.username).catch(err => {
+      console.error('Failed to resend registration OTP email in background:', err);
+    });
     res.status(200).json({ message: 'New OTP sent to your email.' });
   } catch (err) {
     console.error('Resend OTP error:', err);
@@ -237,8 +242,10 @@ const forgotPassword = async (req, res) => {
       code,
     });
 
-    // Send email
-    await sendResetEmail(emailLower, code, user.username);
+    // Send email in background to avoid blocking API response
+    sendResetEmail(emailLower, code, user.username).catch(err => {
+      console.error('Failed to send password reset email in background:', err);
+    });
 
     res.status(200).json({ message: 'Password reset code sent to your email.' });
   } catch (err) {
@@ -269,8 +276,8 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ message: 'Incorrect verification code. Please check your email.' });
     }
 
-    // Hash the new password
-    const passwordHash = await bcrypt.hash(password, 12);
+    // Hash the new password (10 rounds is faster & secure)
+    const passwordHash = await bcrypt.hash(password, 10);
 
     // Update the user's password
     const user = await User.findOne({ email: emailLower });
