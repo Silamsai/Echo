@@ -482,9 +482,9 @@ const Register = () => {
           </p>
           <p style={{ textAlign: 'center', fontSize: '10px', color: 'rgba(255,255,255,0.18)', marginTop: '10px', lineHeight: 1.7 }}>
             By continuing, you agree to our{' '}
-            <a href="#" style={{ color: 'rgba(167,139,250,0.6)', textDecoration: 'none' }}>Terms</a>
+            <Link to="/terms" style={{ color: 'rgba(167,139,250,0.6)', textDecoration: 'none' }}>Terms</Link>
             {' '}and{' '}
-            <a href="#" style={{ color: 'rgba(167,139,250,0.6)', textDecoration: 'none' }}>Privacy Policy</a>.
+            <Link to="/privacy" style={{ color: 'rgba(167,139,250,0.6)', textDecoration: 'none' }}>Privacy Policy</Link>.
           </p>
         </div>
       </div>

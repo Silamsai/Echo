@@ -170,7 +170,10 @@ const Login = () => {
 
             {/* Password field */}
             <div>
-              <label className="block text-[10px] uppercase font-mono tracking-wider text-slate-400 mb-1.5">Password</label>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="block text-[10px] uppercase font-mono tracking-wider text-slate-400">Password</label>
+                <Link to="/forgot-password" className="text-[10px] text-[#7b6ef6] hover:underline font-semibold">Forgot Password?</Link>
+              </div>
               <div className="flex items-center bg-[#14141c] border border-white/5 rounded-xl px-3 py-2 focus-within:border-[#7b6ef6]/40 focus-within:shadow-[0_0_15px_rgba(123,110,246,0.1)] transition-all">
                 <Lock size={15} className="text-slate-500 mr-2.5 flex-shrink-0" />
                 <input
@@ -217,6 +220,12 @@ const Login = () => {
           <p className="text-center text-xs text-slate-400 mt-6 select-text">
             Don't have an account?
             <Link to="/register" className="text-[#7b6ef6] font-bold hover:underline ml-1">Create one</Link>
+          </p>
+          <p className="text-center text-[10px] text-slate-500 mt-4 select-text">
+            By signing in, you agree to our{' '}
+            <Link to="/terms" className="text-slate-400 hover:text-white underline">Terms</Link>
+            {' '}and{' '}
+            <Link to="/privacy" className="text-slate-400 hover:text-white underline">Privacy Policy</Link>.
           </p>
         </div>
       </div>

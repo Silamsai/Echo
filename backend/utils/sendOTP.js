@@ -1,18 +1,40 @@
 const nodemailer = require('nodemailer');
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+// Build the transporter dynamically based on configured variables
+const createTransporter = () => {
+  if (process.env.EMAIL_HOST) {
+    return nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: parseInt(process.env.EMAIL_PORT || '587', 10),
+      secure: process.env.EMAIL_SECURE === 'true', // true for 465, false for other ports
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+  }
+
+  // Fallback to Gmail service if host is not specified
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+};
+
+const transporter = createTransporter();
 
 const sendOTPEmail = async (email, otp, username) => {
+  const fromAddress = process.env.EMAIL_FROM || `"ECHO" <${process.env.EMAIL_USER}>`;
+  const physicalAddress = process.env.EMAIL_PHYSICAL_ADDRESS || 'ECHO Chat Inc., 123 Tech Loop, San Francisco, CA 94107';
+
   const mailOptions = {
-    from: `"ECHO" <${process.env.EMAIL_USER}>`,
+    from: fromAddress,
     to: email,
     subject: 'Your ECHO Verification Code',
+    text: `Hey ${username} 👋\n\nWelcome to ECHO! Use the verification code below to complete your registration:\n\n${otp}\n\nThis code expires in 10 minutes.\n\nIf you didn't request this, you can safely ignore this email.\nNever share this code with anyone.\n\n© 2024 ECHO. All rights reserved.\n${physicalAddress}`,
     html: `
       <!DOCTYPE html>
       <html>
@@ -56,8 +78,9 @@ const sendOTPEmail = async (email, otp, username) => {
                 </tr>
                 <!-- Footer -->
                 <tr>
-                  <td style="background:rgba(0,0,0,0.3);padding:16px 40px;text-align:center;">
-                    <p style="color:#475569;font-size:11px;margin:0;">© 2024 ECHO. All rights reserved.</p>
+                  <td style="background:rgba(0,0,0,0.3);padding:24px 40px;text-align:center;">
+                    <p style="color:#475569;font-size:11px;margin:0 0 8px;">© 2024 ECHO. All rights reserved.</p>
+                    <p style="color:#475569;font-size:10px;margin:0;line-height:1.4;">${physicalAddress}</p>
                   </td>
                 </tr>
               </table>
@@ -67,9 +90,87 @@ const sendOTPEmail = async (email, otp, username) => {
       </body>
       </html>
     `,
+    headers: {
+      'X-Entity-Ref-ID': otp,
+      'Precedence': 'bulk'
+    }
   };
 
   await transporter.sendMail(mailOptions);
 };
 
-module.exports = { sendOTPEmail };
+const sendResetEmail = async (email, code, username) => {
+  const fromAddress = process.env.EMAIL_FROM || `"ECHO Support" <${process.env.EMAIL_USER}>`;
+  const physicalAddress = process.env.EMAIL_PHYSICAL_ADDRESS || 'ECHO Chat Inc., 123 Tech Loop, San Francisco, CA 94107';
+
+  const mailOptions = {
+    from: fromAddress,
+    to: email,
+    subject: 'Reset your ECHO Password',
+    text: `Hey ${username} 👋\n\nWe received a request to reset your password. Use the verification code below to reset it:\n\n${code}\n\nThis code expires in 10 minutes.\n\nIf you didn't request this, you can safely ignore this email.\nNever share this code with anyone.\n\n© 2024 ECHO. All rights reserved.\n${physicalAddress}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ECHO Password Reset</title>
+      </head>
+      <body style="margin:0;padding:0;background-color:#0a0a0f;font-family:'Segoe UI',Arial,sans-serif;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0a0a0f;padding:40px 0;">
+          <tr>
+            <td align="center">
+              <table width="500" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);border-radius:16px;overflow:hidden;border:1px solid rgba(239,68,68,0.3);">
+                <!-- Header -->
+                <tr>
+                  <td align="center" style="padding:40px 40px 20px;">
+                    <div style="font-size:36px;font-weight:900;letter-spacing:8px;color:#ffffff;">
+                      <span style="background:linear-gradient(135deg,#ef4444,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">ECHO</span>
+                    </div>
+                    <div style="color:#94a3b8;font-size:13px;letter-spacing:3px;margin-top:4px;">PASSWORD RESET</div>
+                  </td>
+                </tr>
+                <!-- Body -->
+                <tr>
+                  <td style="padding:20px 40px 40px;">
+                    <p style="color:#e2e8f0;font-size:18px;margin:0 0 8px;">Hey <strong>${username}</strong> 👋</p>
+                    <p style="color:#94a3b8;font-size:14px;line-height:1.6;margin:0 0 32px;">
+                      We received a request to reset your password. Use the verification code below to complete the reset process.
+                      This code expires in <strong style="color:#ef4444;">10 minutes</strong>.
+                    </p>
+                    <!-- OTP Box -->
+                    <div style="background:rgba(239,68,68,0.1);border:2px solid rgba(239,68,68,0.4);border-radius:12px;padding:24px;text-align:center;margin-bottom:32px;">
+                      <div style="font-size:13px;color:#94a3b8;letter-spacing:2px;margin-bottom:12px;">RESET CODE</div>
+                      <div style="font-size:48px;font-weight:800;letter-spacing:16px;color:#ffffff;font-family:'Courier New',monospace;">${code}</div>
+                    </div>
+                    <p style="color:#64748b;font-size:12px;text-align:center;margin:0;">
+                      If you didn't request this, you can safely ignore this email and your password will remain unchanged.<br>
+                      Never share this code with anyone.
+                    </p>
+                  </td>
+                </tr>
+                <!-- Footer -->
+                <tr>
+                  <td style="background:rgba(0,0,0,0.3);padding:24px 40px;text-align:center;">
+                    <p style="color:#475569;font-size:11px;margin:0 0 8px;">© 2024 ECHO. All rights reserved.</p>
+                    <p style="color:#475569;font-size:10px;margin:0;line-height:1.4;">${physicalAddress}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `,
+    headers: {
+      'X-Entity-Ref-ID': code,
+      'Precedence': 'bulk'
+    }
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
+module.exports = { sendOTPEmail, sendResetEmail };
+

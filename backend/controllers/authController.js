@@ -2,8 +2,9 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const User = require('../models/User');
 const OTP = require('../models/OTP');
+const PasswordReset = require('../models/PasswordReset');
 const generateToken = require('../utils/generateToken');
-const { sendOTPEmail } = require('../utils/sendOTP');
+const { sendOTPEmail, sendResetEmail } = require('../utils/sendOTP');
 
 const AppConfig = require('../models/AppConfig');
 
@@ -210,4 +211,82 @@ const getMe = async (req, res) => {
   }
 };
 
-module.exports = { register, verifyOTP, resendOTP, login, googleCallback, getMe };
+// ─── POST /auth/forgot-password ──────────────────────────────────────────────
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Email is required.' });
+
+    const emailLower = email.toLowerCase().trim();
+    const user = await User.findOne({ email: emailLower });
+    if (!user) return res.status(404).json({ message: 'User not found.' });
+
+    if (user.provider === 'google') {
+      return res.status(400).json({ message: 'This account was registered using Google Sign-In.' });
+    }
+
+    // Generate 6-digit code
+    const code = crypto.randomInt(100000, 999999).toString();
+
+    // Delete existing reset codes for this email
+    await PasswordReset.deleteMany({ email: emailLower });
+
+    // Save password reset code
+    await PasswordReset.create({
+      email: emailLower,
+      code,
+    });
+
+    // Send email
+    await sendResetEmail(emailLower, code, user.username);
+
+    res.status(200).json({ message: 'Password reset code sent to your email.' });
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    res.status(500).json({ message: 'Server error.' });
+  }
+};
+
+// ─── POST /auth/reset-password ────────────────────────────────────────────────
+const resetPassword = async (req, res) => {
+  try {
+    const { email, code, password } = req.body;
+    if (!email || !code || !password) {
+      return res.status(400).json({ message: 'All fields (email, code, password) are required.' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters.' });
+    }
+
+    const emailLower = email.toLowerCase().trim();
+    const resetRecord = await PasswordReset.findOne({ email: emailLower });
+    if (!resetRecord) {
+      return res.status(400).json({ message: 'Reset code expired or not found. Please try again.' });
+    }
+
+    if (resetRecord.code !== code.toString().trim()) {
+      return res.status(400).json({ message: 'Incorrect verification code. Please check your email.' });
+    }
+
+    // Hash the new password
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    // Update the user's password
+    const user = await User.findOne({ email: emailLower });
+    if (!user) return res.status(404).json({ message: 'User not found.' });
+
+    user.passwordHash = passwordHash;
+    await user.save();
+
+    // Delete the reset code
+    await PasswordReset.deleteMany({ email: emailLower });
+
+    res.status(200).json({ message: 'Password reset successfully! You can now log in.' });
+  } catch (err) {
+    console.error('Reset password error:', err);
+    res.status(500).json({ message: 'Server error.' });
+  }
+};
+
+module.exports = { register, verifyOTP, resendOTP, login, googleCallback, getMe, forgotPassword, resetPassword };

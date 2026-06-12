@@ -7,6 +7,9 @@ import { ArrowLeft } from 'lucide-react';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import VerifyOTP from './pages/VerifyOTP';
+import ForgotPassword from './pages/ForgotPassword';
+import TermsConditions from './pages/TermsConditions';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import GoogleSuccess from './pages/GoogleSuccess';
 import Home from './pages/Home';
 import Search from './pages/Search';
@@ -121,6 +124,9 @@ const App = () => {
         <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
         <Route path="/register" element={user ? <Navigate to="/" replace /> : <Register />} />
         <Route path="/verify-otp" element={user ? <Navigate to="/" replace /> : <VerifyOTP />} />
+        <Route path="/forgot-password" element={user ? <Navigate to="/" replace /> : <ForgotPassword />} />
+        <Route path="/terms" element={<TermsConditions />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/google-success" element={<GoogleSuccess />} />
 
         {/* Protected routes wrapped in ProtectedLayout */}

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('../config/passport');
-const { register, verifyOTP, resendOTP, login, googleCallback, getMe } = require('../controllers/authController');
+const { register, verifyOTP, resendOTP, login, googleCallback, getMe, forgotPassword, resetPassword } = require('../controllers/authController');
 const { verifyToken } = require('../middleware/verifyToken');
 
 // Local auth
@@ -9,6 +9,8 @@ router.post('/register', register);
 router.post('/verify-otp', verifyOTP);
 router.post('/resend-otp', resendOTP);
 router.post('/login', login);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 
 // Diagnostic endpoint to check env vars
 router.get('/diag', (req, res) => {
