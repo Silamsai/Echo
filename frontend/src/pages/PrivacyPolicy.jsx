@@ -1,15 +1,27 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Shield } from 'lucide-react';
 
 const PrivacyPolicy = () => {
+  const navigate = useNavigate();
+
+  const handleClose = () => {
+    navigate(-1); // Go back to login/register or previous page
+  };
+
   return (
-    <div className="min-h-screen w-screen flex items-center justify-center p-4 md:p-8 overflow-y-auto select-none bg-[#07070c] relative">
+    <div 
+      onClick={handleClose}
+      className="min-h-screen w-screen flex items-center justify-center p-4 md:p-8 overflow-y-auto select-none bg-[#07070c] relative cursor-pointer"
+    >
       {/* Ambient background glow */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[#7b6ef6]/5 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[#5956e9]/5 blur-[120px] pointer-events-none" />
 
       {/* macOS Glassmorphic Card */}
-      <div className="w-full max-w-[650px] rounded-3xl overflow-hidden bg-[#0e0e15]/60 border border-white/5 backdrop-blur-xl shadow-[0_32px_80px_rgba(0,0,0,0.6)] z-10 p-8 md:p-10 my-8 animate-fade-in select-text">
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-[650px] rounded-3xl overflow-hidden bg-[#0e0e15]/60 border border-white/5 backdrop-blur-xl shadow-[0_32px_80px_rgba(0,0,0,0.6)] z-10 p-8 md:p-10 my-8 animate-fade-in select-text cursor-default"
+      >
         <div className="flex flex-col items-center mb-8">
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 bg-gradient-to-br from-[#7b6ef6] to-[#5956e9] shadow-[0_8px_24px_rgba(123,110,246,0.25)]">
             <Shield size={26} className="text-white" />
