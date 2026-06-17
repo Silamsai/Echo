@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/auth/:path*",
+      "destination": "http://13.48.25.75/auth/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
