@@ -16,7 +16,11 @@ import livekitRoutes from './routes/livekit.js';
 import configRoutes from './routes/config.js';
 import workspaceRoutes from './routes/workspace.js';
 
+import mongoose from 'mongoose';
+
 const app = new Hono();
+
+let activeRequests = 0;
 
 // ─── DB/Redis Connection (verified dynamically on every request) ─────────────
 app.use('*', async (c, next) => {
@@ -32,12 +36,26 @@ app.use('*', async (c, next) => {
         return await next();
     }
 
-    // Verify connections on each request (methods are optimized/cached internally)
-    await connectDB(env);
-    connectRedis(env);
-    initCloudinary(env);
+    activeRequests++;
+    try {
+        // Verify connections on each request (methods are optimized/cached internally)
+        await connectDB(env);
+        connectRedis(env);
+        initCloudinary(env);
 
-    await next();
+        await next();
+    } finally {
+        activeRequests--;
+        // Close DB connection on idle in serverless production to avoid stale frozen TCP sockets
+        if (activeRequests === 0 && env.NODE_ENV === 'production') {
+            try {
+                await mongoose.disconnect();
+                console.log('🔌 MongoDB Disconnected (isolate idle)');
+            } catch (err) {
+                console.error('❌ MongoDB Disconnect Error:', err.message);
+            }
+        }
+    }
 });
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────

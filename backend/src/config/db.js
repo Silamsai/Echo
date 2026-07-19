@@ -29,6 +29,9 @@ export const connectDB = async (env) => {
     try {
         const conn = await mongoose.connect(env.MONGO_URI, {
             autoIndex: false, // Disable auto indexing in production to avoid CPU time-outs on cold starts
+            serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+            socketTimeoutMS: 10000,         // Timeout socket after 10s
+            family: 4,                      // Force IPv4 (faster DNS lookups in Cloudflare Workers)
         });
         console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
 
