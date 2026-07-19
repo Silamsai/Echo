@@ -29,10 +29,16 @@ const seedAdmin = async () => {
 export const connectDB = async (env) => {
     if (isConnected) return;
     try {
-        const conn = await mongoose.connect(env.MONGO_URI);
+        const conn = await mongoose.connect(env.MONGO_URI, {
+            autoIndex: false, // Disable auto indexing in production to avoid CPU time-outs on cold starts
+        });
         console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
         isConnected = true;
-        await seedAdmin();
+
+        // Only seed admin in development to save critical CPU time on worker instances
+        if (env.NODE_ENV === 'development' || !env.NODE_ENV) {
+            await seedAdmin();
+        }
     } catch (error) {
         console.error(`❌ MongoDB Error: ${error.message}`);
         throw error;

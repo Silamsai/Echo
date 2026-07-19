@@ -25,6 +25,14 @@ app.use('*', async (c, next) => {
     // Merge process.env for Node.js local context compatibility
     const env = { ...process.env, ...c.env };
     c.env = env;
+    // Attach env to context for controllers
+    c.set('env', env);
+
+    const path = c.req.path;
+    // Skip heavy dependency handshakes for endpoints that do not need them
+    if (path === '/health' || path === '/livekit' || path === '/auth/google') {
+        return await next();
+    }
 
     // Lazily connect MongoDB + Redis + Cloudinary once per Worker instance
     if (!dbConnected) {
@@ -33,8 +41,6 @@ app.use('*', async (c, next) => {
         initCloudinary(env);
         dbConnected = true;
     }
-    // Attach env to context for controllers
-    c.set('env', env);
     await next();
 });
 
@@ -68,6 +74,25 @@ app.route('/workspace', workspaceRoutes);
 app.get('/health', (c) =>
     c.json({ status: 'ok', app: 'ECHO Backend (Cloudflare Workers)', timestamp: new Date() })
 );
+
+app.get('/test-jwt', async (c) => {
+    try {
+        const jwtMod = await import('jsonwebtoken');
+        const token = jwtMod.default.sign({ test: true }, c.env.JWT_SECRET || 'testsecret');
+        return c.json({ ok: true, token });
+    } catch (err) {
+        return c.json({ error: err.message, stack: err.stack }, 500);
+    }
+});
+
+app.get('/test-redis', (c) => {
+    try {
+        const client = connectRedis(c.env);
+        return c.json({ ok: true, isConnected: !!client });
+    } catch (err) {
+        return c.json({ error: err.message, stack: err.stack }, 500);
+    }
+});
 
 // ─── 404 ──────────────────────────────────────────────────────────────────────
 app.notFound((c) => c.json({ message: 'Route not found.' }, 404));
