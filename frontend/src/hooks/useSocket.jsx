@@ -51,8 +51,19 @@ const useSocket = () => {
 
     // ── Echo accepted ────────────────────────────────────────────────────────
     const onEchoAccepted = ({ conversation, acceptedBy }) => {
-      if (conversation) addOrUpdateConversation(conversation);
+      if (conversation) {
+        addOrUpdateConversation(conversation);
+        socket.emit('join-conversation', { conversationId: conversation._id });
+      }
       toast.success(`${acceptedBy?.username} accepted your Echo request! 🎉`);
+    };
+
+    // ── New Group/Workspace Channel ───────────────────────────────────────────
+    const onNewConversation = (conversation) => {
+      if (conversation) {
+        addOrUpdateConversation(conversation);
+        socket.emit('join-conversation', { conversationId: conversation._id });
+      }
     };
 
     // ── Typing ───────────────────────────────────────────────────────────────
@@ -90,6 +101,7 @@ const useSocket = () => {
     socket.on('new-message', onNewMessage);
     socket.on('echo-request-received', onEchoRequestReceived);
     socket.on('echo-accepted', onEchoAccepted);
+    socket.on('new-conversation', onNewConversation);
     socket.on('typing', onTyping);
     socket.on('stop-typing', onStopTyping);
     socket.on('user-online', onUserOnline);
@@ -101,6 +113,7 @@ const useSocket = () => {
       socket.off('new-message', onNewMessage);
       socket.off('echo-request-received', onEchoRequestReceived);
       socket.off('echo-accepted', onEchoAccepted);
+      socket.off('new-conversation', onNewConversation);
       socket.off('typing', onTyping);
       socket.off('stop-typing', onStopTyping);
       socket.off('user-online', onUserOnline);

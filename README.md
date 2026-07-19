@@ -255,7 +255,7 @@ DELETE /admin/message/:id
 
 ---
 
-## 🚀 Installation
+## 🚀 Installation & Local Setup
 
 ### Clone Repository
 
@@ -264,13 +264,24 @@ git clone https://github.com/yourusername/echo.git
 cd echo
 ```
 
-### Backend Setup
+### Backend Setup (Hono & Cloudflare Workers)
 
-```bash
-cd backend
-npm install
-npm run dev
-```
+1. Navigate to the backend directory and install dependencies:
+   ```bash
+   cd backend
+   npm install
+   ```
+
+2. Create your local development environment secrets file:
+   ```bash
+   cp .dev.vars.example .dev.vars
+   ```
+   Open `.dev.vars` and populate it with your development API keys and database strings.
+
+3. Start the local development server (boots Hono via `@hono/node-server` and attaches `socket.io` for full real-time WebSocket capabilities locally):
+   ```bash
+   npm run dev
+   ```
 
 ### Frontend Setup
 
@@ -282,27 +293,36 @@ npm run dev
 
 ---
 
-## ⚙️ Environment Variables
+## ☁️ Cloudflare deployment
 
-### Backend
+The Echo backend is fully migration-ready for serverless deployment on **Cloudflare Workers**.
 
-```env
-PORT=
-MONGO_URI=
-JWT_SECRET=
+### 1. Set up Production Secrets
 
-REDIS_URL=
+First, configure all environment credentials securely using Cloudflare Secrets (do not hardcode these in `wrangler.jsonc`):
 
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
+```bash
+npx wrangler secret put MONGO_URI
+npx wrangler secret put REDIS_URL
+npx wrangler secret put JWT_SECRET
+npx wrangler secret put GOOGLE_CLIENT_ID
+npx wrangler secret put GOOGLE_CLIENT_SECRET
+npx wrangler secret put CLOUDINARY_CLOUD_NAME
+npx wrangler secret put CLOUDINARY_API_KEY
+npx wrangler secret put CLOUDINARY_API_SECRET
+npx wrangler secret put EMAIL_USER
+npx wrangler secret put EMAIL_PASS
+npx wrangler secret put LIVEKIT_API_KEY
+npx wrangler secret put LIVEKIT_API_SECRET
+npx wrangler secret put LIVEKIT_URL
+```
 
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
+### 2. Deploy the Worker
 
-LIVEKIT_API_KEY=
-LIVEKIT_API_SECRET=
-LIVEKIT_URL=
+Deploy your serverless Hono instance directly to the global edge:
+
+```bash
+npm run deploy
 ```
 
 ---

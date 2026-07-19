@@ -7,8 +7,10 @@ const ConversationItem = ({ conversation, isActive, onClick }) => {
   const { user } = useAuthStore();
   const { typingUsers } = useChatStore();
 
-  const other = conversation.participants?.find((p) => p._id !== user?._id);
-  const avatar = other?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${other?.username}`;
+  const other = conversation.isGroup ? null : conversation.participants?.find((p) => p._id !== user?._id);
+  const avatar = conversation.isGroup
+    ? (conversation.groupAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(conversation.name)}&backgroundColor=7b6ef6`)
+    : (other?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${other?.username}`);
   const isTyping = typingUsers[conversation._id]?.size > 0;
   const lastMsg = conversation.lastMessage;
 
@@ -17,7 +19,13 @@ const ConversationItem = ({ conversation, isActive, onClick }) => {
     if (lastMsg.type === 'image') return (<span className="flex items-center gap-1"><ImageIcon size={10} /> Image</span>);
     if (lastMsg.type === 'voice') return (<span className="flex items-center gap-1"><Mic size={10} /> Voice note</span>);
     if (lastMsg.deleted) return 'Message deleted';
-    return lastMsg.content || '';
+
+    // In groups, prefix with sender moniker for context
+    const senderName = lastMsg.sender?._id === user?._id
+      ? 'You'
+      : (lastMsg.sender?.nickname || lastMsg.sender?.username || 'Someone');
+    const content = lastMsg.content || '';
+    return conversation.isGroup ? `${senderName}: ${content}` : content;
   };
 
   const isUnread = lastMsg && !lastMsg.seen && (lastMsg.sender?._id || lastMsg.sender) !== user?._id;
@@ -37,11 +45,11 @@ const ConversationItem = ({ conversation, isActive, onClick }) => {
       <div className="relative flex-shrink-0">
         <img
           src={avatar}
-          alt={other?.username}
+          alt={conversation.isGroup ? conversation.name : other?.username}
           className="w-9 h-9 rounded-lg object-cover"
           style={{ border: '1px solid var(--border-primary)' }}
         />
-        {other?.isOnline && (
+        {!conversation.isGroup && other?.isOnline && (
           <span
             className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 rounded-full shadow-lg"
             style={{ border: '2px solid var(--bg-surface)' }}
@@ -60,7 +68,9 @@ const ConversationItem = ({ conversation, isActive, onClick }) => {
                 fontWeight: isUnread ? 700 : 600,
               }}
             >
-              {other?.nickname || other?.username}
+              {conversation.isGroup
+                ? (conversation.workspace ? `#${conversation.name}` : conversation.name)
+                : (other?.nickname || other?.username)}
             </span>
             {user?.mutedConversations?.includes(conversation._id) && (
               <VolumeX size={10} style={{ color: 'var(--text-muted)', flexShrink: 0 }} title="Muted" />

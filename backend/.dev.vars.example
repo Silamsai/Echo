@@ -1,0 +1,38 @@
+# ─── Echo Backend: Local Development Secrets ─────────────────────
+# Copy this file to `.dev.vars` and fill in values for local dev.
+# These variables are set as Cloudflare Secrets in production.
+
+# Frontend URL (also set as a var in wrangler.jsonc for production)
+FRONTEND_URL=http://localhost:5173
+
+# MongoDB Cloud Atlas
+MONGO_URI=mongodb+srv://user:password@cluster.mongodb.net/?appName=Echo-chat
+
+# Redis Cloud (Upstash)
+REDIS_URL=rediss://default:your_password@your_host.upstash.io:6379
+
+# JWT
+JWT_SECRET=your_jwt_secret_key
+JWT_EXPIRES_IN=7d
+
+# Google OAuth2
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CALLBACK_URL=https://your-worker.workers.dev/auth/google/callback
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# Email (Gmail App Password or SMTP)
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_app_password
+
+# Admin
+ADMIN_SECRET=your_admin_secret
+
+# LiveKit WebRTC
+LIVEKIT_URL=wss://your-livekit.livekit.cloud
+LIVEKIT_API_KEY=your_livekit_api_key
+LIVEKIT_API_SECRET=your_livekit_api_secret

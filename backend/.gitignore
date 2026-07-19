@@ -7,6 +7,8 @@ node_modules/
 .env.production
 .env.development
 .env.staging
+.dev.vars
+.wrangler/
 
 # ─── Logs ────────────────────────────────────────────────────────
 logs/

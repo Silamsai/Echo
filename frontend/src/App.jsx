@@ -1,15 +1,14 @@
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useEffect } from 'react';
 import useAuthStore from './store/authStore';
-import { ArrowLeft } from 'lucide-react';
 
 import Login from './pages/Login';
 import Register from './pages/Register';
 import VerifyOTP from './pages/VerifyOTP';
 import ForgotPassword from './pages/ForgotPassword';
 import TermsConditions from './pages/TermsConditions';
-import PrivacyPolicy from './pages/PrivacyPolicy';
+import PrivacyPolicy from './pages/EchoPrivacy';
 import GoogleSuccess from './pages/GoogleSuccess';
 import Home from './pages/Home';
 import Search from './pages/Search';
@@ -35,11 +34,10 @@ const ProtectedLayout = ({ children }) => {
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg-app)', color: 'var(--text-primary)' }}>
       {/* Dynamic Sidebar / Nav rail */}
       <LeftNavbar />
-      
+
       {/* Page content wrapper with bottom padding on mobile for tabs */}
-      <div className={`flex-1 overflow-hidden flex flex-col relative md:pb-0 ${
-        isChatOpenOnMobile ? 'pb-0' : 'pb-[64px]'
-      }`}>
+      <div className={`flex-1 overflow-hidden flex flex-col relative md:pb-0 ${isChatOpenOnMobile ? 'pb-0' : 'pb-[64px]'
+        }`}>
         {children}
       </div>
     </div>
@@ -53,7 +51,7 @@ const App = () => {
   useEffect(() => {
     initialize();
     fetchConfig(); // Load branding & features config
-    
+
     // Initialize theme — apply light/dark class correctly
     const theme = localStorage.getItem('theme') || 'dark';
     const chatTheme = localStorage.getItem('chatTheme') || 'midnight';
@@ -137,8 +135,8 @@ const App = () => {
         <Route path="/settings" element={<ProtectedLayout><Settings /></ProtectedLayout>} />
         <Route path="/admin" element={
           !user ? <Navigate to="/login" replace /> :
-          !user?.isAdmin ? <Navigate to="/" replace /> :
-          <ProtectedLayout><Admin /></ProtectedLayout>
+            !user?.isAdmin ? <Navigate to="/" replace /> :
+              <ProtectedLayout><Admin /></ProtectedLayout>
         } />
 
         {/* Catch-all */}

@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "echo-backend",
+  "main": "src/index.js",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  // Non-secret environment variables
+  "vars": {
+    "FRONTEND_URL": "https://echo-real-chat.vercel.app"
+  },
+  // All secrets are set via `wrangler secret put <KEY>`
+  // See .dev.vars.example for the full list of required secrets
+}
