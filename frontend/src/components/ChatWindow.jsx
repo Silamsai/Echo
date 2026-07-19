@@ -224,14 +224,25 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
   };
 
   /* ─── Send text ─── */
-  const sendTextMessage = useCallback(() => {
+  const sendTextMessage = useCallback(async () => {
     if (!text.trim() || isSending) return;
-    getSocket()?.emit('send-message', { conversationId, content: text.trim(), type: 'text' }, (res) => {
-      if (res?.error) toast.error(res.error);
-    });
-    setText('');
-    getSocket()?.emit('stop-typing', { conversationId });
-  }, [text, conversationId, isSending]);
+    setIsSending(true);
+    try {
+      const { data: newMessage } = await axiosInstance.post('/message', {
+        conversationId,
+        content: text.trim(),
+        type: 'text',
+      });
+      addMessage(newMessage);
+      updateLastMessage(conversationId, newMessage);
+      setText('');
+      getSocket()?.emit('stop-typing', { conversationId });
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to send message.');
+    } finally {
+      setIsSending(false);
+    }
+  }, [text, conversationId, isSending, addMessage, updateLastMessage]);
 
   /* ─── Send image ─── */
   const sendImage = async () => {

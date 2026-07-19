@@ -129,3 +129,63 @@ export const deleteMessage = async (c) => {
         return c.json({ message: 'Server error.' }, 500);
     }
 };
+
+// ─── POST /message ────────────────────────────────────────────────────────────
+export const sendMessage = async (c) => {
+    try {
+        const { conversationId, content, type = 'text' } = await c.req.json();
+        const currentUser = c.get('user');
+
+        if (!conversationId || !content?.trim())
+            return c.json({ message: 'Invalid message data.' }, 400);
+
+        const conversation = await Conversation.findById(conversationId);
+        if (!conversation) return c.json({ message: 'Conversation not found.' }, 404);
+
+        const isParticipant = conversation.participants.some(
+            (p) => p.toString() === currentUser._id.toString()
+        );
+        if (!isParticipant) return c.json({ message: 'Access denied.' }, 403);
+
+        // Check block relationships for single chats
+        if (!conversation.isGroup) {
+            const otherParticipantId = conversation.participants.find(
+                (p) => p.toString() !== currentUser._id.toString()
+            );
+            if (otherParticipantId) {
+                const otherUser = await User.findById(otherParticipantId).select('blockedUsers');
+                const currentUserFull = await User.findById(currentUser._id).select('blockedUsers');
+                if (
+                    otherUser?.blockedUsers?.includes(currentUser._id) ||
+                    currentUserFull?.blockedUsers?.includes(otherParticipantId)
+                ) {
+                    return c.json({ message: 'Cannot send message. You have blocked this user or they have blocked you.' }, 403);
+                }
+            }
+        }
+
+        // Save message
+        const message = await Message.create({
+            conversation: conversationId,
+            sender: currentUser._id,
+            type,
+            content: content.trim(),
+        });
+
+        await message.populate('sender', '_id username nickname avatar');
+
+        // Update conversation last message timestamp
+        await Conversation.findByIdAndUpdate(conversationId, {
+            lastMessage: message._id,
+            lastMessageAt: new Date(),
+        });
+
+        // Broadcast to socket room
+        emitToSocketOrRoom(c, `conv_${conversationId}`, 'new-message', message);
+
+        return c.json(message, 201);
+    } catch (err) {
+        console.error('Send message error:', err);
+        return c.json({ message: 'Server error.' }, 500);
+    }
+};

@@ -18,9 +18,7 @@ import workspaceRoutes from './routes/workspace.js';
 
 const app = new Hono();
 
-// ─── DB/Redis Connection (cached across requests) ─────────────────────────────
-let dbConnected = false;
-
+// ─── DB/Redis Connection (verified dynamically on every request) ─────────────
 app.use('*', async (c, next) => {
     // Merge process.env for Node.js local context compatibility
     const env = { ...process.env, ...c.env };
@@ -34,13 +32,11 @@ app.use('*', async (c, next) => {
         return await next();
     }
 
-    // Lazily connect MongoDB + Redis + Cloudinary once per Worker instance
-    if (!dbConnected) {
-        await connectDB(env);
-        connectRedis(env);
-        initCloudinary(env);
-        dbConnected = true;
-    }
+    // Verify connections on each request (methods are optimized/cached internally)
+    await connectDB(env);
+    connectRedis(env);
+    initCloudinary(env);
+
     await next();
 });
 
@@ -94,12 +90,29 @@ app.get('/test-redis', (c) => {
     }
 });
 
+app.get('/test-db', async (c) => {
+    try {
+        await connectDB(c.env);
+        return c.json({ ok: true, isConnected: true });
+    } catch (err) {
+        return c.json({ error: err.message, stack: err.stack }, 500);
+    }
+});
+
 // ─── 404 ──────────────────────────────────────────────────────────────────────
 app.notFound((c) => c.json({ message: 'Route not found.' }, 404));
 
 // ─── Global error handler ─────────────────────────────────────────────────────
 app.onError((err, c) => {
     console.error('Unhandled error:', err);
+
+    // Append CORS headers for error responses to avoid chrome blocking them as CORS anomalies
+    const frontendUrl = c.env?.FRONTEND_URL || 'http://localhost:5173';
+    c.header('Access-Control-Allow-Origin', frontendUrl);
+    c.header('Access-Control-Allow-Credentials', 'true');
+    c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
     return c.json({ message: err.message || 'Internal server error.' }, 500);
 });
 

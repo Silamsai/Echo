@@ -8,7 +8,8 @@
   ],
   // Non-secret environment variables
   "vars": {
-    "FRONTEND_URL": "https://echo-real-chat.vercel.app"
+    "FRONTEND_URL": "https://echo-real-chat.vercel.app",
+    "NODE_ENV": "production"
   },
   // All secrets are set via `wrangler secret put <KEY>`
   // See .dev.vars.example for the full list of required secrets

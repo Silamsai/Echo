@@ -2,8 +2,6 @@ import mongoose from 'mongoose';
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 
-let isConnected = false;
-
 const seedAdmin = async () => {
     try {
         const adminEmail = 'admin@echo.com';
@@ -27,16 +25,15 @@ const seedAdmin = async () => {
 };
 
 export const connectDB = async (env) => {
-    if (isConnected) return;
+    if (mongoose.connection.readyState === 1) return;
     try {
         const conn = await mongoose.connect(env.MONGO_URI, {
             autoIndex: false, // Disable auto indexing in production to avoid CPU time-outs on cold starts
         });
         console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
-        isConnected = true;
 
         // Only seed admin in development to save critical CPU time on worker instances
-        if (env.NODE_ENV === 'development' || !env.NODE_ENV) {
+        if (env.NODE_ENV === 'development') {
             await seedAdmin();
         }
     } catch (error) {
