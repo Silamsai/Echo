@@ -443,6 +443,178 @@ html, body, #root {
   box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
 }
 
+/* ───────────────────────────────────────────────────────── */
+/*  MICRO-INTERACTION HOVER ANIMATIONS FOR ICONS              */
+/* ───────────────────────────────────────────────────────── */
+
+/* Universal Transition for all Lucide SVG Icons */
+.lucide, .ws-item svg, .ln-nav-btn svg {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), stroke 0.25s ease, filter 0.25s ease;
+  will-change: transform;
+}
+
+/* 1. Settings Icon - Playful 90-degree Twist */
+button:hover .lucide-settings,
+a:hover .lucide-settings,
+.ln-nav-btn:hover .lucide-settings,
+.ws-item:hover .lucide-settings {
+  transform: rotate(90deg);
+}
+
+/* 2. Notification Bell - Wiggle/Rattle effect */
+@keyframes iconBellWiggle {
+  0%, 100% { transform: rotate(0); }
+  15% { transform: rotate(-14deg); }
+  30% { transform: rotate(12deg); }
+  45% { transform: rotate(-9deg); }
+  60% { transform: rotate(6deg); }
+  75% { transform: rotate(-3deg); }
+}
+button:hover .lucide-bell,
+a:hover .lucide-bell,
+.ln-nav-btn:hover .lucide-bell {
+  animation: iconBellWiggle 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  transform-origin: top center;
+}
+
+/* 3. Messages / Conversations - Squash & Stretch Bounce */
+@keyframes iconMessageBounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  40% { transform: translateY(-4px) scaleX(0.88) scaleY(1.12); }
+  70% { transform: translateY(0.5px) scaleX(1.04) scaleY(0.96); }
+}
+button:hover .lucide-message-square,
+button:hover .lucide-message-circle,
+a:hover .lucide-message-square,
+.ln-nav-btn:hover .lucide-message-square {
+  animation: iconMessageBounce 0.55s ease-out;
+}
+
+/* 4. LogOut - Slide Out */
+button:hover .lucide-log-out,
+a:hover .lucide-log-out {
+  transform: translateX(4px) scale(1.05);
+}
+
+/* 5. Plus / Add - Scale & Quarter-Spin */
+button:hover .lucide-plus,
+button:hover .lucide-plus-circle,
+.ws-item:hover .lucide-plus {
+  transform: rotate(90deg) scale(1.2);
+}
+
+/* 6. Search - Scan / Orbit movement */
+@keyframes iconSearchScan {
+  0%, 100% { transform: scale(1) translate(0, 0); }
+  50% { transform: scale(1.15) translate(1.5px, -1.5px); }
+}
+button:hover .lucide-search,
+a:hover .lucide-search,
+.ln-nav-btn:hover .lucide-search {
+  animation: iconSearchScan 0.5s ease-in-out;
+}
+
+/* 7. Home - Elastic Bounce-up */
+@keyframes iconHomeBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3.5px) scaleY(1.08); }
+}
+button:hover .lucide-home,
+a:hover .lucide-home,
+.ws-item:hover .lucide-home {
+  animation: iconHomeBounce 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* 8. User / Profile - Hover Float */
+@keyframes iconUserFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2.5px); }
+}
+button:hover .lucide-user,
+a:hover .lucide-user,
+.ln-nav-btn:hover .lucide-user {
+  animation: iconUserFloat 0.5s ease-in-out;
+}
+
+/* 9. Shield / Admin - Glow & Expand pulse */
+@keyframes iconShieldPulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0px var(--accent)); }
+  50% { transform: scale(1.12); filter: drop-shadow(0 0 6px var(--accent)); }
+}
+button:hover .lucide-shield,
+a:hover .lucide-shield,
+.ln-nav-btn:hover .lucide-shield {
+  animation: iconShieldPulse 0.55s ease-in-out;
+}
+
+/* 10. Send - Jet take-off translation */
+@keyframes iconSendFly {
+  0% { transform: translate(0, 0) scale(1); }
+  35% { transform: translate(3.5px, -3.5px) scale(0.9); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+button:hover .lucide-send {
+  animation: iconSendFly 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* 11. Trash / Delete - Jiggle */
+@keyframes iconTrashJiggle {
+  0%, 100% { transform: rotate(0); }
+  30% { transform: rotate(-6deg) translateY(-0.5px); }
+  75% { transform: rotate(6deg) translateY(0.5px); }
+}
+button:hover .lucide-trash,
+button:hover .lucide-trash-2 {
+  animation: iconTrashJiggle 0.45s ease-in-out;
+}
+
+/* 12. Volume - Scale-up */
+button:hover .lucide-volume-2,
+button:hover .lucide-volume-x {
+  transform: scale(1.15);
+}
+
+/* 13. Smile / Emoji - Joyous Tilt */
+button:hover .lucide-smile {
+  transform: rotate(18deg) scale(1.15);
+}
+
+/* 14. Paperclip - Attaching Tilt */
+button:hover .lucide-paperclip {
+  transform: rotate(20deg) scale(1.1);
+}
+
+/* 15. Mic & Video Call Controls - Springy Scale Pulse */
+@keyframes iconControlPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+button:hover .lucide-mic,
+button:hover .lucide-video,
+button:hover .lucide-phone {
+  animation: iconControlPulse 0.5s ease-in-out;
+}
+
+/* 16. More Actions Dots - Hover Bounce */
+@keyframes iconDotsJump {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+button:hover .lucide-more-horizontal,
+button:hover .lucide-more-vertical {
+  animation: iconDotsJump 0.45s ease-out;
+}
+
+/* 17. Chevron / Arrow Navigation - Side Shift */
+button:hover .lucide-chevron-right,
+a:hover .lucide-chevron-right {
+  transform: translateX(3px);
+}
+button:hover .lucide-chevron-left,
+a:hover .lucide-chevron-left {
+  transform: translateX(-3px);
+}
+
 /* Reduce motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
   *,
