@@ -1,15 +1,23 @@
 import AppConfig from '../models/AppConfig.js';
 import cloudinary from '../config/cloudinary.js';
 import { parseFile, uploadToCloudinary } from '../middleware/upload.js';
+import { connectDB } from '../config/db.js';
+
+let cachedConfig = null;
 
 // ─── GET /config ─────────────────────────────────────────────────────────────
 export const getConfig = async (c) => {
+    if (cachedConfig) {
+        return c.json(cachedConfig, 200);
+    }
     try {
+        await connectDB(c.env);
         let config = await AppConfig.findOne({ key: 'main_config' });
         if (!config) {
             config = await AppConfig.create({ key: 'main_config' });
         }
-        return c.json(config, 200);
+        cachedConfig = config.toObject ? config.toObject() : config;
+        return c.json(cachedConfig, 200);
     } catch (err) {
         console.error('Get config error:', err);
         return c.json({ message: 'Server error.' }, 500);
@@ -22,6 +30,7 @@ export const updateConfig = async (c) => {
         const body = await c.req.json();
         const { sidebarIcons, features } = body;
 
+        await connectDB(c.env);
         let config = await AppConfig.findOne({ key: 'main_config' });
         if (!config) {
             config = new AppConfig({ key: 'main_config' });
@@ -35,6 +44,7 @@ export const updateConfig = async (c) => {
         }
 
         await config.save();
+        cachedConfig = config.toObject ? config.toObject() : config;
         return c.json({ message: 'App configuration updated.', config }, 200);
     } catch (err) {
         console.error('Update config error:', err);
@@ -53,12 +63,15 @@ export const uploadLogo = async (c) => {
             transformation: [{ width: 200, height: 200, crop: 'limit' }],
         });
 
+        await connectDB(c.env);
         let config = await AppConfig.findOne({ key: 'main_config' });
         if (!config) {
             config = new AppConfig({ key: 'main_config' });
         }
         config.logoUrl = result.secure_url;
         await config.save();
+
+        cachedConfig = config.toObject ? config.toObject() : config;
 
         return c.json({ message: 'App logo uploaded successfully.', logoUrl: result.secure_url }, 200);
     } catch (err) {

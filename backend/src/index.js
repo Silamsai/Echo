@@ -20,8 +20,6 @@ import mongoose from 'mongoose';
 
 const app = new Hono();
 
-let activeRequests = 0;
-
 // ─── DB/Redis Connection (verified dynamically on every request) ─────────────
 app.use('*', async (c, next) => {
     // Merge process.env for Node.js local context compatibility
@@ -31,31 +29,19 @@ app.use('*', async (c, next) => {
     c.set('env', env);
 
     const path = c.req.path;
+    const method = c.req.method;
     // Skip heavy dependency handshakes for endpoints that do not need them
-    if (path === '/health' || path === '/livekit' || path === '/auth/google') {
+    // Skip GET /config as it leverages memory cache to avoid DB handshakes
+    if (path === '/health' || path === '/livekit' || path === '/auth/google' || (path === '/config' && method === 'GET')) {
         return await next();
     }
 
-    activeRequests++;
-    try {
-        // Verify connections on each request (methods are optimized/cached internally)
-        await connectDB(env);
-        connectRedis(env);
-        initCloudinary(env);
+    // Verify connections on each request (methods are optimized/cached internally)
+    await connectDB(env);
+    connectRedis(env);
+    initCloudinary(env);
 
-        await next();
-    } finally {
-        activeRequests--;
-        // Close DB connection on idle in serverless production to avoid stale frozen TCP sockets
-        if (activeRequests === 0 && env.NODE_ENV === 'production') {
-            try {
-                await mongoose.disconnect();
-                console.log('🔌 MongoDB Disconnected (isolate idle)');
-            } catch (err) {
-                console.error('❌ MongoDB Disconnect Error:', err.message);
-            }
-        }
-    }
+    await next();
 });
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
