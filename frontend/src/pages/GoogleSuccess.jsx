@@ -17,13 +17,16 @@ const GoogleSuccess = () => {
       return;
     }
 
-    // Fetch user data with the token
-    axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    // Save the token to local storage first so the Axios request interceptor picks it up
+    localStorage.setItem('echo_token', token);
+
     axiosInstance.get('/auth/me').then(({ data }) => {
       loginWithToken(token, data);
       toast.success(`Welcome, ${data.username}! 🎉`);
       navigate('/');
-    }).catch(() => {
+    }).catch((err) => {
+      localStorage.removeItem('echo_token');
+      console.error('Google login verification failed:', err);
       toast.error('Google login failed.');
       navigate('/login');
     });
@@ -35,8 +38,8 @@ const GoogleSuccess = () => {
         <div className="text-5xl font-black tracking-widest gradient-text mb-4">ECHO</div>
         <div className="flex items-center gap-2 text-slate-400">
           <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
           Finishing Google login...
         </div>
