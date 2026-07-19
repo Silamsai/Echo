@@ -20,8 +20,25 @@ import mongoose from 'mongoose';
 
 const app = new Hono();
 
+// ─── CORS (Must be registered FIRST to intercept preflights and wrap errors) ─
+app.use('*', async (c, next) => {
+    const frontendUrl = c.env.FRONTEND_URL || 'http://localhost:5173';
+    const corsMiddleware = cors({
+        origin: frontendUrl,
+        credentials: true,
+        allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+        allowHeaders: ['Content-Type', 'Authorization'],
+    });
+    return corsMiddleware(c, next);
+});
+
 // ─── DB/Redis Connection (verified dynamically on every request) ─────────────
 app.use('*', async (c, next) => {
+    // Short-circuit OPTIONS requests immediately to prevent unnecessary DB/Redis connection attempts
+    if (c.req.method === 'OPTIONS') {
+        return await next();
+    }
+
     // Merge process.env for Node.js local context compatibility
     const env = { ...process.env, ...c.env };
     c.env = env;
@@ -42,18 +59,6 @@ app.use('*', async (c, next) => {
     initCloudinary(env);
 
     await next();
-});
-
-// ─── CORS ─────────────────────────────────────────────────────────────────────
-app.use('*', async (c, next) => {
-    const frontendUrl = c.env.FRONTEND_URL || 'http://localhost:5173';
-    const corsMiddleware = cors({
-        origin: frontendUrl,
-        credentials: true,
-        allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-        allowHeaders: ['Content-Type', 'Authorization'],
-    });
-    return corsMiddleware(c, next);
 });
 
 // ─── Logger ───────────────────────────────────────────────────────────────────
