@@ -8,7 +8,7 @@
   ],
   // Non-secret environment variables
   "vars": {
-    "FRONTEND_URL": "https://echo-chat.duckdns.org",
+    "FRONTEND_URL": "https://echo-real-chat.vercel.app",
     "NODE_ENV": "production"
   },
   // All secrets are set via `wrangler secret put <KEY>`
