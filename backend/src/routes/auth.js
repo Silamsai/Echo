@@ -34,3 +34,6 @@ auth.get('/google/callback', googleCallback);
 auth.get('/me', verifyToken, getMe);
 
 export default auth;
+
+
+

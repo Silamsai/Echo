@@ -276,10 +276,16 @@ export const googleCallback = async (c) => {
 // ─── GET /auth/me ─────────────────────────────────────────────────────────────
 export const getMe = async (c) => {
     try {
-        const user = await User.findById(c.get('user')._id).select('-passwordHash');
-        return c.json(user, 200);
+        const user = c.get('user');
+        if (!user) return c.json({ message: 'User not found.' }, 401);
+
+        // Convert to plain object to avoid Mongoose serialization issues in serverless Worker environments
+        const userObj = user.toObject ? user.toObject() : user;
+        delete userObj.passwordHash;
+
+        return c.json(userObj, 200);
     } catch (err) {
-        return c.json({ message: 'Server error.' }, 500);
+        return c.json({ message: 'Server error.', error: err.message }, 500);
     }
 };
 
