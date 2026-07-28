@@ -35,10 +35,6 @@ const ChatIllustration = ({
   modeLabel = 'Direct Messages',
   helperText = 'Select a conversation or search for someone to start chatting.',
 }) => {
-  const steps = modeLabel.startsWith('Workspace')
-    ? ['Choose a workspace', 'Open or create a channel', 'Start collaborating']
-    : ['Search for people', 'Start a direct chat', 'Create a group when needed'];
-
   return (
     <div className="ci-root">
 
@@ -50,9 +46,12 @@ const ChatIllustration = ({
       {/* Subtle grid mesh */}
       <div className="ci-mesh" />
 
-      <LiquidBubble sent text="Start here" style={{ top: '16%', left: '10%', animationName: 'ciBubbleFloat1', animationDuration: '7s', opacity: 0.4 }} />
-      <LiquidBubble sent={false} text="Clear and calm flow" style={{ top: '22%', right: '10%', animationName: 'ciBubbleFloat2', animationDuration: '8s', opacity: 0.32 }} />
-      <LiquidBubble sent text="One step at a time" style={{ bottom: '20%', left: '8%', animationName: 'ciBubbleFloat3', animationDuration: '6.5s', opacity: 0.28 }} />
+      <LiquidBubble sent text="Hey! 👋 What's up?" style={{ top: '15%', left: '8%', animationName: 'ciBubbleFloat1', animationDuration: '7s', opacity: 0.55 }} />
+      <LiquidBubble sent={false} text="Just vibing 😊" style={{ top: '20%', right: '8%', animationName: 'ciBubbleFloat2', animationDuration: '8.5s', opacity: 0.45 }} />
+      <LiquidBubble sent text="Let's chat! 💬" style={{ bottom: '24%', left: '6%', animationName: 'ciBubbleFloat3', animationDuration: '6s', opacity: 0.4 }} />
+      <LiquidBubble sent={false} text="🎙️ Voice note — 0:32" style={{ bottom: '18%', right: '7%', animationName: 'ciBubbleFloat1', animationDuration: '9s', animationDelay: '1s', opacity: 0.35 }} />
+      <LiquidBubble sent text="Seen ✓✓" style={{ top: '52%', left: '5%', animationName: 'ciBubbleFloat2', animationDuration: '7.5s', animationDelay: '0.5s', opacity: 0.28 }} />
+      <LiquidBubble sent={false} text="🖼️ Shared a photo" style={{ top: '42%', right: '6%', animationName: 'ciBubbleFloat3', animationDuration: '8s', animationDelay: '1.5s', opacity: 0.3 }} />
 
       {/* Central glass card — Apple vision-style */}
       <div className="ci-center-card">
@@ -74,15 +73,6 @@ const ChatIllustration = ({
         <p className="ci-subtitle">
           {helperText}
         </p>
-
-        <div className="ci-steps">
-          {steps.map((step, index) => (
-            <div key={step} className="ci-step">
-              <span className="ci-step-index">0{index + 1}</span>
-              <span>{step}</span>
-            </div>
-          ))}
-        </div>
 
         <div className="ci-pills">
           <FeaturePill icon="💬" label="Real-time chat" delay="0s" />
