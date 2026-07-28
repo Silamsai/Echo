@@ -1,11 +1,10 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MessageSquare, Search, Bell, User, Settings, Shield, LogOut, Plus, Home } from 'lucide-react';
+import { MessageSquare, Search, Bell, Settings, Shield, LogOut, Plus } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import useNotificationStore from '../store/notificationStore';
 import useConfigStore from '../store/configStore';
 import useChatStore from '../store/chatStore';
-import useWorkspaceStore from '../store/workspaceStore';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import WorkspaceModal from './WorkspaceModal';
 
 const EchoMark = ({ size = 28 }) => (
@@ -31,6 +30,7 @@ const NavButton = ({ item, isActive, onClick }) => {
       key={item.key}
       onClick={onClick}
       title={item.label}
+      data-highlight={highlight ? 'true' : 'false'}
       style={{
         position: 'relative',
         width: '46px',
@@ -118,6 +118,22 @@ const NavButton = ({ item, isActive, onClick }) => {
   );
 };
 
+const SectionLabel = ({ children }) => (
+  <div
+    style={{
+      fontSize: '9px',
+      fontWeight: 700,
+      letterSpacing: '1.4px',
+      textTransform: 'uppercase',
+      color: 'var(--text-muted)',
+      opacity: 0.75,
+      marginBottom: '4px',
+    }}
+  >
+    {children}
+  </div>
+);
+
 const LeftNavbar = () => {
   const { user, logout } = useAuthStore();
   const { unreadCount } = useNotificationStore();
@@ -125,21 +141,7 @@ const LeftNavbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Workspaces implementation
-  const {
-    workspaces,
-    activeWorkspace,
-    setActiveWorkspace,
-    fetchWorkspaces,
-  } = useWorkspaceStore();
-
   const [modalOpen, setModalOpen] = useState(false);
-
-  useEffect(() => {
-    if (user) {
-      fetchWorkspaces();
-    }
-  }, [user, fetchWorkspaces]);
 
   const handleLogout = () => {
     logout();
@@ -150,8 +152,8 @@ const LeftNavbar = () => {
     { key: 'chats', icon: MessageSquare, path: '/', label: 'Chats' },
     { key: 'search', icon: Search, path: '/search', label: 'Search' },
     { key: 'requests', icon: Bell, path: '/notifications', label: 'Requests', badge: unreadCount },
-    { key: 'profile', icon: User, path: '/profile', label: 'Profile' },
-    { key: 'create-workspace', icon: Plus, label: 'Create or Join Workspace', onClick: () => setModalOpen(true), highlight: true },
+  ];
+  const utilityItems = [
     { key: 'settings', icon: Settings, path: '/settings', label: 'Settings' },
     ...(user?.isAdmin ? [{ key: 'admin', icon: Shield, path: '/admin', label: 'Admin' }] : []),
   ];
@@ -210,31 +212,21 @@ const LeftNavbar = () => {
           color: #f87171 !important;
           background: rgba(248,113,113,0.08) !important;
         }
+        .ln-nav-btn[data-highlight="true"]:hover {
+          background: linear-gradient(135deg, var(--accent) 0%, #5956e9 100%) !important;
+          color: #ffffff !important;
+          border-color: var(--accent-border) !important;
+        }
         .ln-mob-btn:hover { color: var(--ln-btn-hover-color) !important; }
-        
-        .ws-item {
-          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .ws-item.active {
-          border-radius: 12px;
-          background: var(--accent);
-          color: white;
-        }
-        .ws-item:not(.active):hover {
-          border-radius: 12px;
-          background: var(--ln-btn-hover-bg);
-          color: white;
-        }
       `}</style>
 
-      {/* ─── DESKTOP RAIL ─── */}
       <div style={{
         display: 'none',
         flexDirection: 'column',
-        alignItems: 'center',
+        alignItems: 'stretch',
         justifyContent: 'space-between',
-        padding: '20px 0',
-        width: '72px',
+        padding: '18px 12px',
+        width: '88px',
         height: '100%',
         background: 'var(--ln-bg)',
         backdropFilter: 'blur(20px)',
@@ -246,7 +238,6 @@ const LeftNavbar = () => {
         zIndex: 30,
       }} className="ln-desktop">
 
-        {/* Subtle glow behind rail */}
         <div style={{
           position: 'absolute',
           top: 0, left: 0, right: 0, bottom: 0,
@@ -254,12 +245,10 @@ const LeftNavbar = () => {
           pointerEvents: 'none',
         }} />
 
-        {/* Top Section: Logo + System Nav */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px', width: '100%' }}>
-          {/* Logo */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative', zIndex: 1 }}>
           <div
             onClick={() => navigate('/')}
-            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', position: 'relative', zIndex: 1 }}
+            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '6px' }}
           >
             {config?.logoUrl ? (
               <img src={config.logoUrl} alt="Logo" style={{ width: '34px', height: '34px', borderRadius: '10px', objectFit: 'contain' }} />
@@ -268,8 +257,44 @@ const LeftNavbar = () => {
             )}
           </div>
 
-          {/* Nav items */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', width: '100%', padding: '0 12px', position: 'relative', zIndex: 1 }}>
+          <div
+            onClick={() => setModalOpen(true)}
+            title="Create or Join Workspace"
+            style={{
+              borderRadius: '16px',
+              padding: '12px 10px',
+              background: 'linear-gradient(180deg, rgba(123,110,246,0.18) 0%, rgba(89,86,233,0.12) 100%)',
+              border: '1px solid var(--accent-border)',
+              boxShadow: '0 8px 24px rgba(89,86,233,0.18)',
+              cursor: 'pointer',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+              <div
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, var(--accent) 0%, #5956e9 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#fff',
+                }}
+              >
+                <Plus size={18} />
+              </div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.3px' }}>New</div>
+              <div style={{ fontSize: '9px', color: 'var(--text-muted)', lineHeight: 1.35, marginTop: '2px' }}>
+                Workspace
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '100%' }}>
+            <SectionLabel>Navigate</SectionLabel>
             {navItems.map((item) => {
               const isActive = item.path ? location.pathname === item.path : false;
               const CustomIconUrl = config?.sidebarIcons?.[item.key];
@@ -287,101 +312,25 @@ const LeftNavbar = () => {
           </div>
         </div>
 
-        {/* Middle Section: Divider + Workspaces */}
-        {location.pathname === '/' && (
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            width: '100%',
-            flex: 1,
-            overflowY: 'auto',
-            padding: '10px 0',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            gap: '8px',
-          }} className="no-scrollbar">
-            {/* Divider */}
-            <div style={{ width: '32px', height: '1px', background: 'var(--ln-border)', margin: '4px 0' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '100%' }}>
+            <SectionLabel>Tools</SectionLabel>
+            {utilityItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              const CustomIconUrl = config?.sidebarIcons?.[item.key];
+              const customItem = CustomIconUrl ? { ...item, customIconUrl: CustomIconUrl } : item;
 
-            {/* DMs / Home Icon - Selects DM side */}
-            <button
-              onClick={() => setActiveWorkspace(null)}
-              title="Direct Messages"
-              style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: activeWorkspace === null ? '12px' : '20px',
-                background: activeWorkspace === null ? 'var(--accent-glow)' : 'var(--bg-panel)',
-                border: activeWorkspace === null ? '1.5px solid var(--accent-border)' : '1px solid var(--border-primary)',
-                color: activeWorkspace === null ? 'var(--accent)' : 'var(--text-secondary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                outline: 'none',
-              }}
-              className="ws-item active:scale-95"
-            >
-              <Home size={16} />
-            </button>
-
-            {/* Render Workspaces */}
-            {workspaces.map((ws) => {
-              const isActive = activeWorkspace?._id === ws._id;
-              const initials = ws.name ? ws.name.slice(0, 2).toUpperCase() : 'WS';
               return (
-                <button
-                  key={ws._id}
-                  onClick={() => setActiveWorkspace(ws)}
-                  title={ws.name}
-                  style={{
-                    width: '42px',
-                    height: '42px',
-                    borderRadius: isActive ? '12px' : '20px',
-                    background: isActive ? 'var(--accent-glow)' : 'var(--bg-panel)',
-                    border: isActive ? '1.5px solid var(--accent-border)' : '1px solid var(--border-primary)',
-                    color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    outline: 'none',
-                  }}
-                  className="ws-item active:scale-95 text-xs font-mono font-bold"
-                >
-                  {initials}
-                </button>
+                <NavButton
+                  key={item.key}
+                  item={customItem}
+                  isActive={isActive}
+                  onClick={() => navigate(item.path)}
+                />
               );
             })}
-
-            {/* Join or Create Workspace Button */}
-            <button
-              onClick={() => setModalOpen(true)}
-              title="Create or Join Workspace"
-              style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: '20px',
-                background: 'transparent',
-                border: '1px dashed var(--border-primary)',
-                color: 'var(--text-muted)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                outline: 'none',
-              }}
-              className="hover:scale-105 active:scale-95 ws-item hover:border-indigo-400 hover:text-white"
-            >
-              <Plus size={16} />
-            </button>
           </div>
-        )}
 
-        {/* Bottom: avatar + logout */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', position: 'relative', zIndex: 1 }}>
-          {/* Avatar */}
           <div
             onClick={() => navigate('/profile')}
             className="ln-avatar-wrap"
@@ -397,7 +346,6 @@ const LeftNavbar = () => {
             <img src={getAvatar()} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
 
-          {/* Logout */}
           <button
             onClick={handleLogout}
             title="Logout"
@@ -418,7 +366,6 @@ const LeftNavbar = () => {
         </div>
       </div >
 
-      {/* ─── MOBILE BOTTOM BAR ─── */}
       {
         showMobileBottomBar && (
           <div style={{
@@ -436,7 +383,7 @@ const LeftNavbar = () => {
             zIndex: 40,
             userSelect: 'none',
           }} className="ln-mobile">
-            {navItems.map((item) => {
+            {[...navItems, ...utilityItems].map((item) => {
               const isActive = item.path ? location.pathname === item.path : false;
               const CustomIconUrl = config?.sidebarIcons?.[item.key];
               const Icon = item.icon;

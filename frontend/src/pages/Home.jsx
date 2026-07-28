@@ -6,7 +6,7 @@ import useChatStore from '../store/chatStore';
 import useWorkspaceStore from '../store/workspaceStore';
 import useSocket from '../hooks/useSocket';
 
-const MIN_W = 200;
+const MIN_W = 240;
 const MAX_W = 450;
 
 const Home = () => {
@@ -14,7 +14,7 @@ const Home = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(true);
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     const saved = localStorage.getItem('sidebarWidth');
-    return saved ? parseInt(saved, 10) : 260;
+    return saved ? parseInt(saved, 10) : 300;
   });
   const [isResizing, setIsResizing] = useState(false);
 
