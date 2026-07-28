@@ -33,7 +33,7 @@ const Search = () => {
       // Also emit via socket for real-time delivery
       const socket = getSocket();
       socket?.emit('echo-request', { toUserId });
-      toast.success(`Echo request sent to ${username}! 📡`);
+      toast.success(`Connection request sent to ${username}.`);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to send request.');
     }
@@ -105,7 +105,7 @@ const Search = () => {
                 {sentRequests.has(u._id) ? (
                   <><Check size={15} /> Sent</>
                 ) : (
-                  <><UserPlus size={15} /> Echo</>
+                  <><UserPlus size={15} /> Connect</>
                 )}
               </button>
             </div>
@@ -123,7 +123,7 @@ const Search = () => {
             <div className="text-center py-16 text-slate-500">
               <div className="text-5xl mb-4">📡</div>
               <p className="text-lg">Search for people to connect</p>
-              <p className="text-sm mt-2">Find friends and send them an Echo</p>
+              <p className="text-sm mt-2">Find people and send them a connection request</p>
             </div>
           )}
         </div>

@@ -3,6 +3,7 @@ import Sidebar from '../components/Sidebar';
 import ChatWindow from '../components/ChatWindow';
 import ChatIllustration from '../components/ChatIllustration';
 import useChatStore from '../store/chatStore';
+import useWorkspaceStore from '../store/workspaceStore';
 import useSocket from '../hooks/useSocket';
 
 const MIN_W = 200;
@@ -22,6 +23,7 @@ const Home = () => {
   const dragStartW = useRef(0);
 
   const { setActiveConversation: storeSetActive } = useChatStore();
+  const { activeWorkspace } = useWorkspaceStore();
 
   useSocket();
 
@@ -122,7 +124,12 @@ const Home = () => {
           </div>
         ) : (
           <div className="flex-1 hidden md:flex overflow-hidden">
-            <ChatIllustration />
+            <ChatIllustration
+              modeLabel={activeWorkspace ? `Workspace: ${activeWorkspace.name}` : 'Direct Messages'}
+              helperText={activeWorkspace
+                ? 'Pick a channel on the left or create a new one from the sidebar.'
+                : 'Select an existing chat, search for people, or start a new group from the sidebar.'}
+            />
           </div>
         )}
       </div>

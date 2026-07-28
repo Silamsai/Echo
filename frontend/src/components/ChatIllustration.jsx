@@ -31,7 +31,10 @@ const FeaturePill = ({ icon, label, delay }) => (
   </div>
 );
 
-const ChatIllustration = () => {
+const ChatIllustration = ({
+  modeLabel = 'Direct Messages',
+  helperText = 'Select a conversation or search for someone to start chatting.',
+}) => {
   return (
     <div className="ci-root">
 
@@ -67,9 +70,9 @@ const ChatIllustration = () => {
         <div className="ci-brand">echo</div>
 
         {/* Tagline */}
-        <p className="ci-tagline">Welcome back 👋</p>
+        <p className="ci-tagline">{modeLabel}</p>
         <p className="ci-subtitle">
-          Select a conversation or search for someone to start chatting.
+          {helperText}
         </p>
 
         {/* Feature pills */}

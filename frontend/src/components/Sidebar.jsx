@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Search, Radio, Plus, X, Home } from 'lucide-react';
+import { Search, Radio, Plus, X, Home, Building2, Users, Hash } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import useChatStore from '../store/chatStore';
 import useWorkspaceStore from '../store/workspaceStore';
 import axiosInstance from '../utils/axiosInstance';
 import ConversationItem from './ConversationItem';
 import toast from 'react-hot-toast';
+import WorkspaceModal from './WorkspaceModal';
 
 const Sidebar = ({ onSelectConversation, activeConversation }) => {
   const { user } = useAuthStore();
@@ -17,8 +18,6 @@ const Sidebar = ({ onSelectConversation, activeConversation }) => {
     activeWorkspace,
     setActiveWorkspace,
     fetchWorkspaces,
-    createWorkspace,
-    joinWorkspace
   } = useWorkspaceStore();
 
   const [search, setSearch] = useState('');
@@ -36,12 +35,6 @@ const Sidebar = ({ onSelectConversation, activeConversation }) => {
   const [newGroupName, setNewGroupName] = useState('');
   const [connections, setConnections] = useState([]);
   const [selectedContacts, setSelectedContacts] = useState([]);
-
-  // Create/Join Workspace modal values
-  const [wsModalTab, setWsModalTab] = useState('join');
-  const [wsName, setWsName] = useState('');
-  const [wsDesc, setWsDesc] = useState('');
-  const [wsCode, setWsCode] = useState('');
 
   // Fetch workspaces on mount
   useEffect(() => {
@@ -137,39 +130,6 @@ const Sidebar = ({ onSelectConversation, activeConversation }) => {
     }
   };
 
-  const handleCreateWorkspace = async (e) => {
-    e.preventDefault();
-    if (!wsName.trim()) return toast.error('Workspace name is required');
-    try {
-      setIsSubmitting(true);
-      await createWorkspace(wsName.trim(), wsDesc.trim());
-      toast.success('Workspace created successfully!');
-      setWsModalOpen(false);
-      setWsName('');
-      setWsDesc('');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to create workspace.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleJoinWorkspace = async (e) => {
-    e.preventDefault();
-    if (!wsCode.trim()) return toast.error('Invite code is required');
-    try {
-      setIsSubmitting(true);
-      const res = await joinWorkspace(wsCode.trim());
-      toast.success(`Joined workspace: ${res.workspace?.name}!`);
-      setWsModalOpen(false);
-      setWsCode('');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Invalid or expired invite code.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const toggleContact = (contactId) => {
     if (selectedContacts.includes(contactId)) {
       setSelectedContacts(selectedContacts.filter(id => id !== contactId));
@@ -209,6 +169,36 @@ const Sidebar = ({ onSelectConversation, activeConversation }) => {
             {activeWorkspace ? 'Workspace Channels' : 'Direct Messages'}
           </div>
         </div>
+      </div>
+
+      <div
+        className="px-4 py-3 flex items-start justify-between gap-3 border-b border-white/5 flex-shrink-0"
+        style={{ background: 'rgba(124,109,250,0.05)' }}
+      >
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[1.6px]" style={{ color: 'var(--text-muted)' }}>
+            {activeWorkspace ? <Building2 size={12} /> : <Users size={12} />}
+            <span>{activeWorkspace ? 'Workspace Mode' : 'Direct Messages'}</span>
+          </div>
+          <p className="text-[11px] mt-1 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            {activeWorkspace
+              ? `Posting in ${activeWorkspace.name}. Use the channel action to create new workspace channels.`
+              : 'Private chats and group chats live here. Use the action on the right to start a group chat.'}
+          </p>
+        </div>
+        <button
+          onClick={() => (activeWorkspace ? setChannelModalOpen(true) : setGroupModalOpen(true))}
+          className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide border transition cursor-pointer flex items-center gap-1.5 flex-shrink-0"
+          style={{
+            background: 'var(--bg-panel)',
+            borderColor: 'var(--accent-border)',
+            color: 'var(--accent)',
+          }}
+          title={activeWorkspace ? 'Create Channel' : 'Create Group'}
+        >
+          {activeWorkspace ? <Hash size={11} /> : <Users size={11} />}
+          <span>{activeWorkspace ? 'New Channel' : 'New Group'}</span>
+        </button>
       </div>
 
       {/* Workspace Switcher Row (Visual row at top of sidebar for easy access on mobile/desktop) */}
@@ -272,28 +262,6 @@ const Sidebar = ({ onSelectConversation, activeConversation }) => {
           );
         })}
 
-        {/* Add/Join Workspace "+" button */}
-        <button
-          onClick={() => setWsModalOpen(true)}
-          title="Create or Join Workspace"
-          style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: '9px',
-            background: 'transparent',
-            border: '1.5px dashed var(--border-primary)',
-            color: 'var(--text-muted)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            flexShrink: 0,
-            transition: 'all 0.2s',
-          }}
-          className="hover:border-[#7c6dfa] hover:text-white active:scale-95"
-        >
-          <Plus size={13} />
-        </button>
       </div>
 
       {/* Search Input */}
@@ -326,23 +294,9 @@ const Sidebar = ({ onSelectConversation, activeConversation }) => {
         style={{ color: 'var(--text-muted)' }}
       >
         <span>{activeWorkspace ? 'Channels' : 'Conversations'}</span>
-        {activeWorkspace ? (
-          <button
-            onClick={() => setChannelModalOpen(true)}
-            className="p-1 rounded hover:bg-white/5 text-[#7c6dfa] hover:text-[#fa6d9b] transition cursor-pointer"
-            title="Create Channel"
-          >
-            <Plus size={12} />
-          </button>
-        ) : (
-          <button
-            onClick={() => setGroupModalOpen(true)}
-            className="p-1 rounded hover:bg-white/5 text-[#7c6dfa] hover:text-[#fa6d9b] transition cursor-pointer"
-            title="Create Group"
-          >
-            <Plus size={12} />
-          </button>
-        )}
+        <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>
+          {activeWorkspace ? `${filtered.length} channels` : `${filtered.length} chats`}
+        </span>
       </div>
 
       {/* Conversations List */}
@@ -359,8 +313,36 @@ const Sidebar = ({ onSelectConversation, activeConversation }) => {
                 </div>
                 <p className="font-semibold" style={{ color: 'var(--text-secondary)' }}>No active chats</p>
                 <p className="text-[9px]" style={{ color: 'var(--text-muted)' }}>
-                  {activeWorkspace ? 'Click + to create a workspace channel' : 'Search contacts to start chatting'}
+                  {activeWorkspace ? 'Create a channel or switch workspaces from the rail.' : 'Start a group chat, or search for people to begin a direct message.'}
                 </p>
+                <div className="flex gap-2 mt-3">
+                  <button
+                    type="button"
+                    onClick={() => (activeWorkspace ? setChannelModalOpen(true) : setGroupModalOpen(true))}
+                    className="px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wide border transition cursor-pointer"
+                    style={{
+                      background: 'var(--bg-panel)',
+                      color: 'var(--accent)',
+                      borderColor: 'var(--accent-border)',
+                    }}
+                  >
+                    {activeWorkspace ? 'Create Channel' : 'Create Group'}
+                  </button>
+                  {!activeWorkspace && (
+                    <button
+                      type="button"
+                      onClick={() => setWsModalOpen(true)}
+                      className="px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wide border transition cursor-pointer"
+                      style={{
+                        background: 'transparent',
+                        color: 'var(--text-secondary)',
+                        borderColor: 'var(--border-primary)',
+                      }}
+                    >
+                      Workspaces
+                    </button>
+                  )}
+                </div>
               </div>
             ) : (
               <p>No chats found</p>
@@ -578,175 +560,7 @@ const Sidebar = ({ onSelectConversation, activeConversation }) => {
         </div>
       )}
 
-      {/* ─── CREATE / JOIN WORKSPACE MODAL (accessible to both desktop and mobile sidebars) ─── */}
-      {wsModalOpen && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.6)',
-          backdropFilter: 'blur(8px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-        }}>
-          <div style={{
-            background: 'var(--bg-surface)',
-            border: '1px solid var(--border-primary)',
-            borderRadius: '18px',
-            width: '90%',
-            maxWidth: '400px',
-            padding: '24px',
-            boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
-            position: 'relative',
-          }}>
-            <button
-              onClick={() => setWsModalOpen(false)}
-              style={{
-                position: 'absolute',
-                top: '16px',
-                right: '16px',
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--text-muted)',
-                cursor: 'pointer',
-              }}
-            >
-              <X size={18} />
-            </button>
-
-            <h3 style={{ fontSize: '16px', fontWeight: 850, color: 'var(--text-primary)', marginBottom: '16px' }}>
-              Workspaces System
-            </h3>
-
-            {/* Tab switch */}
-            <div style={{ display: 'flex', borderBottom: '1px solid var(--border-primary)', marginBottom: '20px' }}>
-              <button
-                type="button"
-                onClick={() => setWsModalTab('join')}
-                style={{
-                  flex: 1,
-                  padding: '10px 0',
-                  background: 'transparent',
-                  border: 'none',
-                  color: wsModalTab === 'join' ? 'var(--accent)' : 'var(--text-muted)',
-                  borderBottom: wsModalTab === 'join' ? '2px solid var(--accent)' : 'none',
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                Join Workspace
-              </button>
-              <button
-                type="button"
-                onClick={() => setWsModalTab('create')}
-                style={{
-                  flex: 1,
-                  padding: '10px 0',
-                  background: 'transparent',
-                  border: 'none',
-                  color: wsModalTab === 'create' ? 'var(--accent)' : 'var(--text-muted)',
-                  borderBottom: wsModalTab === 'create' ? '2px solid var(--accent)' : 'none',
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                Create Workspace
-              </button>
-            </div>
-
-            {/* Form */}
-            {wsModalTab === 'join' ? (
-              <form onSubmit={handleJoinWorkspace} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '10px', fontMono: true, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                    Invite Code
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Enter an 8-character invite code"
-                    value={wsCode}
-                    onChange={(e) => setWsCode(e.target.value)}
-                    style={{
-                      padding: '10px 12px',
-                      borderRadius: '10px',
-                      background: 'var(--bg-panel)',
-                      border: '1px solid var(--border-primary)',
-                      color: 'var(--text-primary)',
-                      fontSize: '13px',
-                      outline: 'none',
-                    }}
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="btn-primary"
-                  style={{ padding: '10px', fontSize: '13px', fontWeight: 600 }}
-                >
-                  {isSubmitting ? 'Joining…' : 'Join Workspace'}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleCreateWorkspace} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '10px', fontMono: true, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                    Workspace Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Acme Corp"
-                    value={wsName}
-                    onChange={(e) => setWsName(e.target.value)}
-                    style={{
-                      padding: '10px 12px',
-                      borderRadius: '10px',
-                      background: 'var(--bg-panel)',
-                      border: '1px solid var(--border-primary)',
-                      color: 'var(--text-primary)',
-                      fontSize: '13px',
-                      outline: 'none',
-                    }}
-                  />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '10px', fontMono: true, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                    Description
-                  </label>
-                  <textarea
-                    placeholder="Brief description of your team"
-                    value={wsDesc}
-                    onChange={(e) => setWsDesc(e.target.value)}
-                    rows={2}
-                    style={{
-                      padding: '10px 12px',
-                      borderRadius: '10px',
-                      background: 'var(--bg-panel)',
-                      border: '1px solid var(--border-primary)',
-                      color: 'var(--text-primary)',
-                      fontSize: '13px',
-                      outline: 'none',
-                      resize: 'none',
-                    }}
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="btn-primary"
-                  style={{ padding: '10px', fontSize: '13px', fontWeight: 600 }}
-                >
-                  {isSubmitting ? 'Creating…' : 'Create Workspace'}
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
+      <WorkspaceModal open={wsModalOpen} onClose={() => setWsModalOpen(false)} />
     </div>
   );
 };

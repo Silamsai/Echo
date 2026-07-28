@@ -4,6 +4,11 @@ import useChatStore from '../store/chatStore';
 import useNotificationStore from '../store/notificationStore';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
+import { playUiChime, showDesktopNotification } from '../utils/runtimeAlerts';
+import {
+  isDesktopNotificationsEnabled,
+  isSoundEnabled,
+} from '../utils/userPreferences';
 
 const useSocket = () => {
   const { user } = useAuthStore();
@@ -23,11 +28,53 @@ const useSocket = () => {
       const convId = message.conversation?._id || message.conversation;
       addMessage(message);
       updateLastMessage(convId, message);
+
+      const activeConversationId = useChatStore.getState().activeConversation?._id;
+      const isOwnMessage = (message.sender?._id || message.sender) === user?._id;
+      const senderName = message.sender?.nickname || message.sender?.username || 'Someone';
+      const preview = message.type === 'text'
+        ? message.content
+        : message.type === 'image'
+          ? 'Sent an image'
+          : 'Sent a voice note';
+
+      if (!isOwnMessage && isSoundEnabled()) {
+        playUiChime();
+      }
+
+      if (
+        !isOwnMessage &&
+        isDesktopNotificationsEnabled() &&
+        document.hidden &&
+        activeConversationId !== convId
+      ) {
+        showDesktopNotification({
+          title: senderName,
+          body: preview || 'New message received',
+          icon: message.sender?.avatar,
+          tag: `message-${convId}`,
+        });
+      }
     };
 
     // ── Echo request received ────────────────────────────────────────────────
     const onEchoRequestReceived = ({ request }) => {
       addEchoRequest(request);
+      const senderName = request?.sender?.nickname || request?.sender?.username || 'Someone';
+
+      if (isSoundEnabled()) {
+        playUiChime();
+      }
+
+      if (isDesktopNotificationsEnabled() && document.hidden) {
+        showDesktopNotification({
+          title: 'New connection request',
+          body: `${senderName} wants to connect with you.`,
+          icon: request?.sender?.avatar,
+          tag: `request-${request?._id}`,
+        });
+      }
+
       toast.custom(
         (t) => (
           <div
@@ -41,7 +88,7 @@ const useSocket = () => {
             />
             <div>
               <p className="font-semibold text-sm text-white">{request?.sender?.username}</p>
-              <p className="text-xs text-slate-400">Sent you an Echo request 🔔</p>
+              <p className="text-xs text-slate-400">Sent you a connection request.</p>
             </div>
           </div>
         ),
@@ -55,7 +102,7 @@ const useSocket = () => {
         addOrUpdateConversation(conversation);
         socket.emit('join-conversation', { conversationId: conversation._id });
       }
-      toast.success(`${acceptedBy?.username} accepted your Echo request! 🎉`);
+      toast.success(`${acceptedBy?.username} accepted your connection request.`);
     };
 
     // ── New Group/Workspace Channel ───────────────────────────────────────────

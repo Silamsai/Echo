@@ -16,6 +16,7 @@ import useWorkspaceStore from '../store/workspaceStore';
 import useMediaRecorder from '../hooks/useMediaRecorder';
 import { formatLastSeen } from '../utils/formatTime';
 import useConfigStore from '../store/configStore';
+import { isTypingIndicatorsEnabled } from '../utils/userPreferences';
 
 /* ─── Utility ─── */
 const getAvatar = (u) => u?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u?.username}`;
@@ -207,6 +208,7 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
   /* ─── Typing ─── */
   const handleTextChange = (e) => {
     setText(e.target.value);
+    if (!isTypingIndicatorsEnabled()) return;
     const socket = getSocket();
     socket?.emit('typing', { conversationId });
     clearTimeout(typingTimeout.current);
@@ -236,7 +238,9 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
       addMessage(newMessage);
       updateLastMessage(conversationId, newMessage);
       setText('');
-      getSocket()?.emit('stop-typing', { conversationId });
+      if (isTypingIndicatorsEnabled()) {
+        getSocket()?.emit('stop-typing', { conversationId });
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to send message.');
     } finally {

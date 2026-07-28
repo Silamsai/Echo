@@ -34,7 +34,7 @@ const Notifications = () => {
         conversationId: data.conversation?._id,
       });
 
-      toast.success(`Connected with ${req.sender.username}! 🎉`);
+      toast.success(`Connected with ${req.sender.username}.`);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to accept.');
     } finally {
@@ -51,7 +51,7 @@ const Notifications = () => {
       const socket = getSocket();
       socket?.emit('echo-decline', { senderId: req.sender._id });
 
-      toast('Request declined.', { icon: '👋' });
+      toast('Request declined.');
     } catch {
       toast.error('Failed to decline.');
     } finally {
@@ -67,7 +67,7 @@ const Notifications = () => {
             <Bell size={20} className="text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-pri">Echo Requests</h1>
+            <h1 className="text-2xl font-bold text-pri">Connection Requests</h1>
             <p className="text-slate-400 text-sm">{echoRequests.length} pending</p>
           </div>
         </div>
@@ -76,7 +76,7 @@ const Notifications = () => {
           <div className="text-center py-20 text-slate-500">
             <div className="text-6xl mb-4">📭</div>
             <p className="text-lg">No pending requests</p>
-            <p className="text-sm mt-2">When someone sends you an Echo, it appears here</p>
+            <p className="text-sm mt-2">When someone sends you a connection request, it appears here</p>
           </div>
         ) : (
           <div className="space-y-3">

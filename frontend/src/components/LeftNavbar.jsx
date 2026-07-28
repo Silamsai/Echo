@@ -1,12 +1,12 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MessageSquare, Search, Bell, User, Settings, Shield, LogOut, Plus, Home, X } from 'lucide-react';
+import { MessageSquare, Search, Bell, User, Settings, Shield, LogOut, Plus, Home } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import useNotificationStore from '../store/notificationStore';
 import useConfigStore from '../store/configStore';
 import useChatStore from '../store/chatStore';
 import useWorkspaceStore from '../store/workspaceStore';
 import { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
+import WorkspaceModal from './WorkspaceModal';
 
 const EchoMark = ({ size = 28 }) => (
   <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
@@ -25,6 +25,7 @@ const EchoMark = ({ size = 28 }) => (
 const NavButton = ({ item, isActive, onClick }) => {
   const Icon = item.icon;
   const highlight = item.highlight;
+  const customIconUrl = item.customIconUrl;
   return (
     <button
       key={item.key}
@@ -61,7 +62,20 @@ const NavButton = ({ item, isActive, onClick }) => {
       }}
       className="ln-nav-btn"
     >
-      {Icon && <Icon size={19} />}
+      {customIconUrl ? (
+        <img
+          src={customIconUrl}
+          alt={item.label}
+          style={{
+            width: '19px',
+            height: '19px',
+            objectFit: 'contain',
+            filter: highlight ? 'brightness(0) invert(1)' : isActive ? 'none' : 'grayscale(1) opacity(0.8)',
+          }}
+        />
+      ) : (
+        Icon && <Icon size={19} />
+      )}
 
       {/* Badge */}
       {item.badge > 0 && (
@@ -117,16 +131,9 @@ const LeftNavbar = () => {
     activeWorkspace,
     setActiveWorkspace,
     fetchWorkspaces,
-    createWorkspace,
-    joinWorkspace,
   } = useWorkspaceStore();
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalTab, setModalTab] = useState('join'); // 'join' or 'create'
-  const [wsName, setWsName] = useState('');
-  const [wsDesc, setWsDesc] = useState('');
-  const [wsCode, setWsCode] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -137,41 +144,6 @@ const LeftNavbar = () => {
   const handleLogout = () => {
     logout();
     navigate('/login');
-  };
-
-  const handleCreateWorkspace = async (e) => {
-    e.preventDefault();
-    if (!wsName.trim()) return toast.error('Workspace name is required');
-    try {
-      setIsSubmitting(true);
-      await createWorkspace(wsName.trim(), wsDesc.trim());
-      toast.success('Workspace created successfully!');
-      setModalOpen(false);
-      setWsName('');
-      setWsDesc('');
-      navigate('/'); // Go to chat view
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to create workspace.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleJoinWorkspace = async (e) => {
-    e.preventDefault();
-    if (!wsCode.trim()) return toast.error('Invite code is required');
-    try {
-      setIsSubmitting(true);
-      const res = await joinWorkspace(wsCode.trim());
-      toast.success(`Joined workspace: ${res.workspace?.name}!`);
-      setModalOpen(false);
-      setWsCode('');
-      navigate('/'); // Go to chat view
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Invalid or expired invite code.');
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const navItems = [
@@ -301,7 +273,7 @@ const LeftNavbar = () => {
             {navItems.map((item) => {
               const isActive = item.path ? location.pathname === item.path : false;
               const CustomIconUrl = config?.sidebarIcons?.[item.key];
-              const customItem = CustomIconUrl ? { ...item, icon: null } : item;
+              const customItem = CustomIconUrl ? { ...item, customIconUrl: CustomIconUrl } : item;
 
               return (
                 <NavButton
@@ -504,175 +476,11 @@ const LeftNavbar = () => {
         )
       }
 
-      {/* ─── CREATE / JOIN WORKSPACE MODAL ─── */}
-      {
-        modalOpen && (
-          <div style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.6)',
-            backdropFilter: 'blur(8px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}>
-            <div style={{
-              background: 'var(--bg-surface)',
-              border: '1px solid var(--border-primary)',
-              borderRadius: '18px',
-              width: '90%',
-              maxWidth: '400px',
-              padding: '24px',
-              boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
-              position: 'relative',
-            }}>
-              <button
-                onClick={() => setModalOpen(false)}
-                style={{
-                  position: 'absolute',
-                  top: '16px',
-                  right: '16px',
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                }}
-              >
-                <X size={18} />
-              </button>
-
-              <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '16px' }}>
-                Workspaces System
-              </h3>
-
-              {/* Tab switch */}
-              <div style={{ display: 'flex', borderBottom: '1px solid var(--border-primary)', marginBottom: '20px' }}>
-                <button
-                  onClick={() => setModalTab('join')}
-                  style={{
-                    flex: 1,
-                    padding: '10px 0',
-                    background: 'transparent',
-                    border: 'none',
-                    color: modalTab === 'join' ? 'var(--accent)' : 'var(--text-muted)',
-                    borderBottom: modalTab === 'join' ? '2px solid var(--accent)' : 'none',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Join Workspace
-                </button>
-                <button
-                  onClick={() => setModalTab('create')}
-                  style={{
-                    flex: 1,
-                    padding: '10px 0',
-                    background: 'transparent',
-                    border: 'none',
-                    color: modalTab === 'create' ? 'var(--accent)' : 'var(--text-muted)',
-                    borderBottom: modalTab === 'create' ? '2px solid var(--accent)' : 'none',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Create Workspace
-                </button>
-              </div>
-
-              {/* Form */}
-              {modalTab === 'join' ? (
-                <form onSubmit={handleJoinWorkspace} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '10px', fontMono: true, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                      Invite Code
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Enter an 8-character invite code"
-                      value={wsCode}
-                      onChange={(e) => setWsCode(e.target.value)}
-                      style={{
-                        padding: '10px 12px',
-                        borderRadius: '10px',
-                        background: 'var(--bg-panel)',
-                        border: '1px solid var(--border-primary)',
-                        color: 'var(--text-primary)',
-                        fontSize: '13px',
-                        outline: 'none',
-                      }}
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="btn-primary"
-                    style={{ padding: '10px', fontSize: '13px', fontWeight: 600 }}
-                  >
-                    {isSubmitting ? 'Joining…' : 'Join Workspace'}
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={handleCreateWorkspace} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '10px', fontMono: true, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                      Workspace Name
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Acme Corp"
-                      value={wsName}
-                      onChange={(e) => setWsName(e.target.value)}
-                      style={{
-                        padding: '10px 12px',
-                        borderRadius: '10px',
-                        background: 'var(--bg-panel)',
-                        border: '1px solid var(--border-primary)',
-                        color: 'var(--text-primary)',
-                        fontSize: '13px',
-                        outline: 'none',
-                      }}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '10px', fontMono: true, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-                      description
-                    </label>
-                    <textarea
-                      placeholder="Brief description of your team"
-                      value={wsDesc}
-                      onChange={(e) => setWsDesc(e.target.value)}
-                      rows={2}
-                      style={{
-                        padding: '10px 12px',
-                        borderRadius: '10px',
-                        background: 'var(--bg-panel)',
-                        border: '1px solid var(--border-primary)',
-                        color: 'var(--text-primary)',
-                        fontSize: '13px',
-                        outline: 'none',
-                        resize: 'none',
-                      }}
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="btn-primary"
-                    style={{ padding: '10px', fontSize: '13px', fontWeight: 600 }}
-                  >
-                    {isSubmitting ? 'Creating…' : 'Create Workspace'}
-                  </button>
-                </form>
-              )}
-            </div>
-          </div>
-        )
-      }
+      <WorkspaceModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSuccess={() => navigate('/')}
+      />
 
       {/* Show desktop only on md+ */}
       <style>{`

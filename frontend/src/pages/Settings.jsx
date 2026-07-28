@@ -1,72 +1,31 @@
-import { useState, useEffect, useRef } from 'react';
-import { Settings as SettingsIcon, Bell, Shield, Sun, Moon, Volume2, Monitor, Eye, Camera, Save } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Settings as SettingsIcon, Bell, Shield, Sun, Moon, Volume2, Monitor, Eye, UserCircle, ArrowRight, Mail, Fingerprint } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useAuthStore from '../store/authStore';
-import axiosInstance from '../utils/axiosInstance';
+import {
+  getBooleanPreference,
+  preferenceKeys,
+  requestDesktopNotificationPermission,
+  setBooleanPreference,
+} from '../utils/userPreferences';
 
 const Settings = () => {
-  const { user, updateUser } = useAuthStore();
+  const { user } = useAuthStore();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('general');
-
-  // Profile Edit Form States
-  const [profileForm, setProfileForm] = useState({ username: user?.username || '', bio: user?.bio || '', nickname: user?.nickname || '' });
-  const [avatarFile, setAvatarFile] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState(user?.avatar || '');
-  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
-  const fileRef = useRef(null);
-
-  // Sync profile details when user changes
-  useEffect(() => {
-    if (user) {
-      setProfileForm({ username: user.username || '', bio: user.bio || '', nickname: user.nickname || '' });
-      setAvatarPreview(user.avatar || '');
-    }
-  }, [user]);
-
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) return toast.error('Image must be under 5MB.');
-    setAvatarFile(file);
-    setAvatarPreview(URL.createObjectURL(file));
-  };
-
-  const handleSaveProfile = async () => {
-    setIsUpdatingProfile(true);
-    try {
-      const formData = new FormData();
-      if (profileForm.username !== user?.username) formData.append('username', profileForm.username);
-      if (profileForm.bio !== user?.bio) formData.append('bio', profileForm.bio);
-      if (profileForm.nickname !== user?.nickname) formData.append('nickname', profileForm.nickname);
-      if (avatarFile) formData.append('avatar', avatarFile);
-
-      const { data } = await axiosInstance.put('/user/profile', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      updateUser(data);
-      setAvatarFile(null);
-      toast.success('Profile updated! ✅');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Update failed.');
-    } finally {
-      setIsUpdatingProfile(false);
-    }
-  };
 
   // Load preferences from localStorage or defaults
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
-  const [soundEnabled, setSoundEnabled] = useState(() => {
-    const val = localStorage.getItem('setting_sound');
-    return val === null ? true : val === 'true';
-  });
-  const [desktopNotif, setDesktopNotif] = useState(() => {
-    const val = localStorage.getItem('setting_desktop_notif');
-    return val === null ? true : val === 'true';
-  });
-  const [showTyping, setShowTyping] = useState(() => {
-    const val = localStorage.getItem('setting_show_typing');
-    return val === null ? true : val === 'true';
-  });
+  const [soundEnabled, setSoundEnabled] = useState(() =>
+    getBooleanPreference(preferenceKeys.sound, true)
+  );
+  const [desktopNotif, setDesktopNotif] = useState(() =>
+    getBooleanPreference(preferenceKeys.desktopNotifications, true)
+  );
+  const [showTyping, setShowTyping] = useState(() =>
+    getBooleanPreference(preferenceKeys.showTyping, true)
+  );
 
   // Handle theme changes — toggles both 'light' and 'dark' classes
   const handleThemeChange = (newTheme) => {
@@ -82,21 +41,42 @@ const Settings = () => {
     toast.success(`${newTheme.charAt(0).toUpperCase() + newTheme.slice(1)} theme enabled`);
   };
 
-  // Sync states to localStorage
   useEffect(() => {
-    localStorage.setItem('setting_sound', soundEnabled);
+    setBooleanPreference(preferenceKeys.sound, soundEnabled);
   }, [soundEnabled]);
 
   useEffect(() => {
-    localStorage.setItem('setting_desktop_notif', desktopNotif);
+    setBooleanPreference(preferenceKeys.desktopNotifications, desktopNotif);
   }, [desktopNotif]);
 
   useEffect(() => {
-    localStorage.setItem('setting_show_typing', showTyping);
+    setBooleanPreference(preferenceKeys.showTyping, showTyping);
   }, [showTyping]);
 
   const getAvatar = () =>
     user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username}`;
+
+  const handleDesktopNotifToggle = async () => {
+    const nextValue = !desktopNotif;
+    setDesktopNotif(nextValue);
+
+    if (!nextValue) return;
+
+    const result = await requestDesktopNotificationPermission();
+    if (!result.supported) {
+      toast.error('Desktop notifications are not supported in this browser.');
+      setDesktopNotif(false);
+      return;
+    }
+
+    if (!result.granted) {
+      toast.error('Browser notification permission is blocked.');
+      setDesktopNotif(false);
+      return;
+    }
+
+    toast.success('Desktop notifications enabled.');
+  };
 
   return (
     <div className="flex-grow flex flex-col h-full bg-app text-pri font-sans select-none overflow-hidden fade-in">
@@ -230,7 +210,7 @@ const Settings = () => {
               <div className="space-y-6 animate-slide-in-right">
                 <div>
                   <h2 className="text-base font-extrabold text-pri mb-1">Notification Options</h2>
-                  <p className="text-slate-500 text-[11px] leading-normal font-mono max-w-sm">Configure how incoming signals, requests, and updates alert your device.</p>
+                  <p className="text-slate-500 text-[11px] leading-normal font-mono max-w-sm">Configure how incoming messages, contact requests, and updates alert your device.</p>
                 </div>
 
                 <div className="divide-y divide-[var(--border-primary)] border border-pri rounded-xl bg-panel overflow-hidden">
@@ -240,12 +220,12 @@ const Settings = () => {
                       <Monitor className="text-[#7c6dfa] flex-shrink-0 mt-0.5" size={16} />
                       <div>
                         <p className="text-xs font-bold text-pri">Desktop Banner Alerts</p>
-                        <p className="text-[10px] text-slate-500 leading-relaxed font-mono mt-0.5">Show native OS push notification banners when messages arrive in background.</p>
+                        <p className="text-[10px] text-slate-500 leading-relaxed font-mono mt-0.5">Show native browser notifications for new messages and connection requests while Echo is in the background.</p>
                       </div>
                     </div>
                     <button
                       type="button"
-                      onClick={() => setDesktopNotif(!desktopNotif)}
+                      onClick={handleDesktopNotifToggle}
                       className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors flex-shrink-0 cursor-pointer ${
                         desktopNotif ? 'bg-[#7c6dfa]' : 'bg-slate-300 dark:bg-white/10'
                       }`}
@@ -262,7 +242,7 @@ const Settings = () => {
                       <Volume2 className="text-[#fa6d9b] flex-shrink-0 mt-0.5" size={16} />
                       <div>
                         <p className="text-xs font-bold text-pri">Sound Effects</p>
-                        <p className="text-[10px] text-slate-500 leading-relaxed font-mono mt-0.5">Play audio echoes on incoming messages, sent triggers, and request alerts.</p>
+                        <p className="text-[10px] text-slate-500 leading-relaxed font-mono mt-0.5">Play a short chime for new messages and incoming connection requests.</p>
                       </div>
                     </div>
                     <button
@@ -284,7 +264,7 @@ const Settings = () => {
                       <Eye className="text-green-400 flex-shrink-0 mt-0.5" size={16} />
                       <div>
                         <p className="text-xs font-bold text-pri">Share Typing Presence</p>
-                        <p className="text-[10px] text-slate-500 leading-relaxed font-mono mt-0.5">Broadcast active typing states to other members in channels during conversation.</p>
+                        <p className="text-[10px] text-slate-500 leading-relaxed font-mono mt-0.5">Control whether Echo broadcasts your typing status to other people in conversations.</p>
                       </div>
                     </div>
                     <button
@@ -307,23 +287,17 @@ const Settings = () => {
               <div className="space-y-6 animate-slide-in-right">
                 <div>
                   <h2 className="text-base font-extrabold text-pri mb-1">Security & Identity</h2>
-                  <p className="text-slate-500 text-[11px] leading-normal font-mono max-w-sm">Manage security attributes, verified credentials, and update your profile details.</p>
+                  <p className="text-slate-500 text-[11px] leading-normal font-mono max-w-sm">Review your account details and jump to the dedicated profile editor when you want to update identity information.</p>
                 </div>
 
-                {/* Profile Card & Photo Editor */}
+                {/* Account summary */}
                 <div className="flex flex-col sm:flex-row items-center gap-5 p-5 border border-pri bg-panel rounded-xl">
-                  {/* Photo Edit */}
-                  <div className="relative group flex-shrink-0 cursor-pointer" onClick={() => fileRef.current?.click()}>
+                  <div className="relative group flex-shrink-0">
                     <img
-                       src={avatarPreview || getAvatar()}
-                       alt="avatar"
-                       className="w-20 h-20 rounded-2xl object-cover border border-pri group-hover:border-[#7c6dfa] transition-all duration-200"
+                      src={getAvatar()}
+                      alt="avatar"
+                      className="w-20 h-20 rounded-2xl object-cover border border-pri"
                     />
-                    <div className="absolute inset-0 rounded-2xl bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
-                      <Camera size={18} className="text-white" />
-                      <span className="text-[8px] text-slate-300 uppercase font-bold tracking-wider">Change</span>
-                    </div>
-                    <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
                   </div>
 
                   <div className="min-w-0 flex-1 text-center sm:text-left">
@@ -335,78 +309,48 @@ const Settings = () => {
                         {user?.isAdmin ? 'ADMIN' : 'MEMBER'}
                       </span>
                     </div>
+                    <p className="text-[10px] text-slate-500 font-mono mt-1 truncate">{user?.nickname || 'No nickname set'}</p>
                     <p className="text-[10px] text-slate-500 font-mono mt-1 truncate">{user?.email}</p>
-                    {avatarFile && (
-                      <span className="text-[9.5px] text-green-400 font-mono block mt-1">✓ New photo selected</span>
-                    )}
                   </div>
                 </div>
 
-                {/* Edit Form */}
-                <div className="space-y-4">
-                  {/* Username Field */}
-                  <div>
-                    <label className="text-[10px] font-mono tracking-wider text-mute mb-1.5 block uppercase">Username</label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-mono">@</span>
-                      <input
-                        type="text"
-                        className="w-full bg-panel text-pri border border-pri rounded-lg py-2.5 pl-7 pr-4 text-xs font-sans placeholder-slate-600 outline-none focus:border-[#7c6dfa]/40 transition-all duration-150"
-                        value={profileForm.username}
-                        onChange={(e) => setProfileForm({ ...profileForm, username: e.target.value })}
-                        placeholder="username"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Nickname Field */}
-                  <div>
-                    <label className="text-[10px] font-mono tracking-wider text-mute mb-1.5 block uppercase">Nickname</label>
-                    <input
-                      type="text"
-                      className="w-full bg-panel text-pri border border-pri rounded-lg py-2.5 px-3.5 text-xs font-sans placeholder-slate-600 outline-none focus:border-[#7c6dfa]/40 transition-all duration-150"
-                      value={profileForm.nickname || ''}
-                      onChange={(e) => setProfileForm({ ...profileForm, nickname: e.target.value })}
-                      placeholder="Enter nickname"
-                    />
-                  </div>
-
-                  {/* Bio Field */}
-                  <div>
-                    <label className="text-[10px] font-mono tracking-wider text-mute mb-1.5 block uppercase">Bio</label>
-                    <textarea
-                      className="w-full bg-panel text-pri border border-pri rounded-lg py-2.5 px-3.5 text-xs font-sans placeholder-slate-600 outline-none focus:border-[#7c6dfa]/40 transition-all duration-150 resize-none"
-                      rows={3}
-                      value={profileForm.bio}
-                      onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
-                      placeholder="Write a bio..."
-                      maxLength={160}
-                    />
-                    <div className="flex justify-between items-center mt-1 text-[9px] font-mono text-slate-600">
-                      <span>Max 160 characters</span>
-                      <span>{profileForm.bio.length}/160</span>
-                    </div>
-                  </div>
-
-                  {/* Save Changes Button */}
+                <div className="grid gap-3 sm:grid-cols-2">
                   <button
-                    onClick={handleSaveProfile}
-                    disabled={isUpdatingProfile}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-xs font-bold text-white transition-all cursor-pointer bg-gradient-to-r from-[#7c6dfa] to-[#fa6d9b] hover:opacity-95 disabled:opacity-50"
+                    type="button"
+                    onClick={() => navigate('/profile')}
+                    className="w-full flex items-center justify-between gap-2 py-3 px-4 rounded-lg text-xs font-bold transition-all cursor-pointer border border-pri bg-panel hover:border-[#7c6dfa]/40"
                   >
-                    <Save size={14} />
-                    {isUpdatingProfile ? 'Saving Changes...' : 'Save Profile Changes'}
+                    <span className="flex items-center gap-2">
+                      <UserCircle size={14} className="text-[#7c6dfa]" />
+                      Edit Profile
+                    </span>
+                    <ArrowRight size={14} className="text-slate-500" />
                   </button>
+                  <div className="w-full flex items-center justify-between gap-2 py-3 px-4 rounded-lg text-xs font-bold border border-pri bg-panel">
+                    <span className="flex items-center gap-2">
+                      <Fingerprint size={14} className="text-green-400" />
+                      Typing visibility
+                    </span>
+                    <span style={{ color: showTyping ? '#4ade80' : 'var(--text-muted)' }}>
+                      {showTyping ? 'Shared' : 'Hidden'}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Info blocks */}
                 <div className="border border-pri rounded-xl bg-panel divide-y divide-[var(--border-primary)] font-mono text-[10px]">
-                  
-                  {/* Auth Provider */}
+                  <div className="flex justify-between items-center p-3.5">
+                    <span className="text-slate-500 flex items-center gap-2">
+                      <Mail size={12} />
+                      CONTACT
+                    </span>
+                    <span className="text-pri font-bold truncate pl-4">{user?.email}</span>
+                  </div>
+
                   <div className="flex justify-between items-center p-3.5">
                     <span className="text-slate-500">PROVIDER</span>
                     <span className="text-pri font-bold">
-                      {user?.provider === 'google' ? '🟢 GOOGLE AUTHORIZED' : '📧 EMAIL & PASSWORD'}
+                      {user?.provider === 'google' ? 'GOOGLE AUTHORIZED' : 'EMAIL AND PASSWORD'}
                     </span>
                   </div>
 
@@ -426,7 +370,6 @@ const Settings = () => {
                     </div>
                   )}
 
-                  {/* Encryption status */}
                   <div className="flex justify-between items-center p-3.5">
                     <span className="text-slate-500">SESSION KEY</span>
                     <span className="text-green-400 font-bold flex items-center gap-1.5">
