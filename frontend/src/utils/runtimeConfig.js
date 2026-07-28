@@ -1,6 +1,5 @@
 const DEFAULT_LOCAL_API_URL = 'http://localhost:5000';
-const DEFAULT_PRODUCTION_API_URL = 'https://echo-backend.echo-backend.workers.dev';
-const LEGACY_PRODUCTION_API_URL = 'https://echo-backend.tomai-backend.workers.dev';
+const DEFAULT_PRODUCTION_API_URL = 'https://echo-backend.tomai-backend.workers.dev';
 
 const normalizeUrl = (url) => (url || '').trim().replace(/\/+$/, '');
 
@@ -9,10 +8,6 @@ export const getApiBaseUrl = () => {
   const isLocalHost =
     typeof window !== 'undefined' &&
     ['localhost', '127.0.0.1'].includes(window.location.hostname);
-
-  if (configuredUrl === normalizeUrl(LEGACY_PRODUCTION_API_URL)) {
-    return DEFAULT_PRODUCTION_API_URL;
-  }
 
   if (configuredUrl) {
     return configuredUrl;
