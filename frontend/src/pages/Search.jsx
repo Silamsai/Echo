@@ -3,6 +3,7 @@ import { Search as SearchIcon, UserPlus, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axiosInstance from '../utils/axiosInstance';
 import { getSocket } from '../socket/socket';
+import Avatar from '../components/Avatar';
 
 const Search = () => {
   const [query, setQuery] = useState('');
@@ -39,8 +40,7 @@ const Search = () => {
     }
   };
 
-  const getAvatar = (u) =>
-    u.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.username}`;
+
 
   return (
     <div className="flex-1 overflow-y-auto p-6">
@@ -73,16 +73,13 @@ const Search = () => {
         <div className="space-y-3">
           {results.map((u) => (
             <div key={u._id} className="glass rounded-2xl p-4 flex items-center gap-4 fade-in">
-              <div className="relative flex-shrink-0">
-                <img
-                  src={getAvatar(u)}
-                  alt={u.username}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-                {u.isOnline && (
-                  <span className="online-dot absolute -bottom-0.5 -right-0.5"></span>
-                )}
-              </div>
+              <Avatar
+                src={u.avatar}
+                name={u.nickname || u.username}
+                sizeClass="w-12 h-12"
+                borderRadiusClass="rounded-full"
+                isOnline={u.isOnline}
+              />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-pri">@{u.username}</p>
                 {u.bio && <p className="text-slate-400 text-sm truncate">{u.bio}</p>}
@@ -96,11 +93,10 @@ const Search = () => {
                 id={`echo-btn-${u._id}`}
                 onClick={() => sendEchoRequest(u._id, u.username)}
                 disabled={sentRequests.has(u._id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                  sentRequests.has(u._id)
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${sentRequests.has(u._id)
                     ? 'bg-green-500/10 text-green-400 border border-green-500/30 cursor-not-allowed'
                     : 'btn-primary'
-                }`}
+                  }`}
               >
                 {sentRequests.has(u._id) ? (
                   <><Check size={15} /> Sent</>

@@ -1,16 +1,16 @@
 import { formatConversationTime } from '../utils/formatTime';
-import { VolumeX, Image as ImageIcon, Mic } from 'lucide-react';
+import { VolumeX, Image as ImageIcon, Mic, Pin } from 'lucide-react';
+import { BsPinAngleFill, BsVolumeMuteFill } from 'react-icons/bs';
 import useChatStore from '../store/chatStore';
 import useAuthStore from '../store/authStore';
+import Avatar from './Avatar';
 
 const ConversationItem = ({ conversation, isActive, onClick }) => {
   const { user } = useAuthStore();
   const { typingUsers } = useChatStore();
 
   const other = conversation.isGroup ? null : conversation.participants?.find((p) => p._id !== user?._id);
-  const avatar = conversation.isGroup
-    ? (conversation.groupAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(conversation.name)}&backgroundColor=7b6ef6`)
-    : (other?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${other?.username}`);
+  const avatar = conversation.isGroup ? conversation.groupAvatar : other?.avatar;
   const isTyping = typingUsers[conversation._id]?.size > 0;
   const lastMsg = conversation.lastMessage;
 
@@ -42,20 +42,13 @@ const ConversationItem = ({ conversation, isActive, onClick }) => {
       onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
     >
       {/* Avatar */}
-      <div className="relative flex-shrink-0">
-        <img
-          src={avatar}
-          alt={conversation.isGroup ? conversation.name : other?.username}
-          className="w-9 h-9 rounded-lg object-cover"
-          style={{ border: '1px solid var(--border-primary)' }}
-        />
-        {!conversation.isGroup && other?.isOnline && (
-          <span
-            className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 rounded-full shadow-lg"
-            style={{ border: '2px solid var(--bg-surface)' }}
-          />
-        )}
-      </div>
+      <Avatar
+        src={avatar}
+        name={conversation.isGroup ? conversation.name : other?.nickname || other?.username}
+        sizeClass="w-9 h-9"
+        borderRadiusClass="rounded-lg"
+        isOnline={!conversation.isGroup && other?.isOnline}
+      />
 
       {/* Info */}
       <div className="flex-1 min-w-0">
@@ -73,7 +66,10 @@ const ConversationItem = ({ conversation, isActive, onClick }) => {
                 : (other?.nickname || other?.username)}
             </span>
             {user?.mutedConversations?.includes(conversation._id) && (
-              <VolumeX size={10} style={{ color: 'var(--text-muted)', flexShrink: 0 }} title="Muted" />
+              <BsVolumeMuteFill size={11} style={{ color: 'var(--text-muted)', flexShrink: 0 }} title="Muted" />
+            )}
+            {user?.pinnedConversations?.includes(conversation._id) && (
+              <BsPinAngleFill size={11} style={{ color: 'var(--accent)', flexShrink: 0 }} title="Pinned" />
             )}
           </div>
           <span

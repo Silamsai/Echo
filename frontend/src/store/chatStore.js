@@ -85,6 +85,12 @@ const useChatStore = create((set) => ({
         ),
       })),
     })),
+
+  deleteConversationStore: (convId) =>
+    set((s) => ({
+      conversations: s.conversations.filter((c) => c._id !== convId),
+      activeConversation: s.activeConversation?._id === convId ? null : s.activeConversation,
+    })),
 }));
 
 export default useChatStore;

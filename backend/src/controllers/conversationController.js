@@ -1,5 +1,6 @@
 import Conversation from '../models/Conversation.js';
 import EchoRequest from '../models/EchoRequest.js';
+import Message from '../models/Message.js';
 import { emitToSocketOrRoom } from '../utils/socketEmit.js';
 
 // ─── GET /conversation ────────────────────────────────────────────────────────
@@ -119,6 +120,62 @@ export const addMemberToGroupConversation = async (c) => {
         }, 200);
     } catch (err) {
         console.error('Add member to group error:', err);
+        return c.json({ message: 'Server error.' }, 500);
+    }
+};
+
+// ─── DELETE /conversation/:conversationId ────────────────────────────────────
+export const deleteConversation = async (c) => {
+    try {
+        const conversationId = c.req.param('conversationId');
+        const currentUser = c.get('user');
+
+        const conversation = await Conversation.findById(conversationId);
+        if (!conversation) return c.json({ message: 'Conversation not found.' }, 404);
+
+        const isParticipant = conversation.participants.some(p => p.toString() === currentUser._id.toString());
+        if (!isParticipant) return c.json({ message: 'Access denied.' }, 403);
+
+        const participants = [...conversation.participants];
+
+        if (conversation.isGroup) {
+            if (conversation.groupAdmin?.toString() === currentUser._id.toString()) {
+                // If group admin, delete the entire group and all messages
+                await Conversation.findByIdAndDelete(conversationId);
+                await Message.deleteMany({ conversation: conversationId });
+            } else {
+                // If normal member, just leave the group
+                conversation.participants = conversation.participants.filter(
+                    (p) => p.toString() !== currentUser._id.toString()
+                );
+                await conversation.save();
+            }
+        } else {
+            // Delete direct message conversation and messages completely
+            await Conversation.findByIdAndDelete(conversationId);
+            await Message.deleteMany({ conversation: conversationId });
+
+            // Delete the connection request so they can reconnect in the future
+            const [u1, u2] = conversation.participants;
+            if (u1 && u2) {
+                await EchoRequest.deleteMany({
+                    $or: [
+                        { sender: u1, receiver: u2 },
+                        { sender: u2, receiver: u1 }
+                    ]
+                });
+            }
+        }
+
+        // Emit to sockets to remove conversation dynamically
+        participants.forEach((userId) => {
+            emitToSocketOrRoom(c, `user_${userId}`, 'conversation-deleted', { conversationId });
+        });
+        emitToSocketOrRoom(c, `conv_${conversationId}`, 'conversation-deleted', { conversationId });
+
+        return c.json({ message: 'Conversation deleted successfully.', conversationId }, 200);
+    } catch (err) {
+        console.error('Delete conversation error:', err);
         return c.json({ message: 'Server error.' }, 500);
     }
 };

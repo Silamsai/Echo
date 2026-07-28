@@ -1,6 +1,7 @@
 import { CheckCheck, Check } from 'lucide-react';
 import { formatMessageTime } from '../utils/formatTime';
 import useAuthStore from '../store/authStore';
+import Avatar from './Avatar';
 
 const MessageBubble = ({ message }) => {
   const { user } = useAuthStore();
@@ -23,22 +24,23 @@ const MessageBubble = ({ message }) => {
     );
   }
 
-  const getAvatar = (u) => u?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u?.username}`;
+
 
   return (
     <div className={`flex ${isSent ? 'justify-end' : 'justify-start'} mb-2.5 fade-in items-end gap-2`}>
       {/* Received Avatar on Left */}
       {!isSent && (
-        <img
-          src={getAvatar(message.sender)}
-          alt=""
-          className="w-7 h-7 rounded-lg object-cover flex-shrink-0 mb-1"
+        <Avatar
+          src={message.sender?.avatar}
+          name={message.sender?.nickname || message.sender?.username}
+          sizeClass="w-7 h-7"
+          borderRadiusClass="rounded-lg"
         />
       )}
 
       {/* Bubble Container */}
       <div className={`flex flex-col ${isSent ? 'items-end' : 'items-start'} max-w-[65%]`}>
-        
+
         {/* Render Image Message */}
         {message.type === 'image' && message.fileUrl && (
           <div className={`rounded-xl overflow-hidden mb-1 border border-pri ${isSent ? 'rounded-br-sm' : 'rounded-bl-sm'}`}>

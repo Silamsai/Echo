@@ -80,6 +80,12 @@ const userSchema = new mongoose.Schema(
                 ref: 'Conversation',
             },
         ],
+        pinnedConversations: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Conversation',
+            },
+        ],
     },
     { timestamps: true }
 );

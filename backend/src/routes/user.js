@@ -3,7 +3,8 @@ import { verifyToken } from '../middleware/verifyToken.js';
 import {
     searchUsers, getUserProfile, updateProfile,
     getConnections, blockUser, unblockUser,
-    muteConversation, unmuteConversation
+    muteConversation, unmuteConversation,
+    pinConversation, unpinConversation
 } from '../controllers/userController.js';
 
 const user = new Hono();
@@ -18,5 +19,7 @@ user.put('/block/:userId', verifyToken, blockUser);
 user.put('/unblock/:userId', verifyToken, unblockUser);
 user.put('/mute/:conversationId', verifyToken, muteConversation);
 user.put('/unmute/:conversationId', verifyToken, unmuteConversation);
+user.put('/pin/:conversationId', verifyToken, pinConversation);
+user.put('/unpin/:conversationId', verifyToken, unpinConversation);
 
 export default user;

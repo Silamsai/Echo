@@ -170,3 +170,33 @@ export const unmuteConversation = async (c) => {
         return c.json({ message: 'Server error.' }, 500);
     }
 };
+
+// ─── PUT /user/pin/:conversationId ───────────────────────────────────────────
+export const pinConversation = async (c) => {
+    try {
+        const conversationId = c.req.param('conversationId');
+        const user = await User.findByIdAndUpdate(
+            c.get('user')._id,
+            { $addToSet: { pinnedConversations: conversationId } },
+            { new: true }
+        ).select('-passwordHash');
+        return c.json(user, 200);
+    } catch (err) {
+        return c.json({ message: 'Server error.' }, 500);
+    }
+};
+
+// ─── PUT /user/unpin/:conversationId ──────────────────────────────────────────
+export const unpinConversation = async (c) => {
+    try {
+        const conversationId = c.req.param('conversationId');
+        const user = await User.findByIdAndUpdate(
+            c.get('user')._id,
+            { $pull: { pinnedConversations: conversationId } },
+            { new: true }
+        ).select('-passwordHash');
+        return c.json(user, 200);
+    } catch (err) {
+        return c.json({ message: 'Server error.' }, 500);
+    }
+};

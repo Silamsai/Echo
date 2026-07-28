@@ -145,6 +145,11 @@ const useSocket = () => {
       }, 2000);
     };
 
+    // ── Conversation deleted ──────────────────────────────────────────────────
+    const onConversationDeleted = ({ conversationId }) => {
+      useChatStore.getState().deleteConversationStore(conversationId);
+    };
+
     socket.on('new-message', onNewMessage);
     socket.on('echo-request-received', onEchoRequestReceived);
     socket.on('echo-accepted', onEchoAccepted);
@@ -155,6 +160,7 @@ const useSocket = () => {
     socket.on('user-offline', onUserOffline);
     socket.on('message-seen', onMessageSeen);
     socket.on('force-logout', onForceLogout);
+    socket.on('conversation-deleted', onConversationDeleted);
 
     return () => {
       socket.off('new-message', onNewMessage);
@@ -167,6 +173,7 @@ const useSocket = () => {
       socket.off('user-offline', onUserOffline);
       socket.off('message-seen', onMessageSeen);
       socket.off('force-logout', onForceLogout);
+      socket.off('conversation-deleted', onConversationDeleted);
     };
   }, [
     user,
