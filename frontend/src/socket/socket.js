@@ -1,4 +1,5 @@
 import { io } from 'socket.io-client';
+import { getApiBaseUrl } from '../utils/runtimeConfig';
 
 let socket = null;
 
@@ -7,7 +8,7 @@ export const getSocket = () => socket;
 export const initSocket = (token) => {
   if (socket) socket.disconnect();
 
-  socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
+  socket = io(getApiBaseUrl(), {
     auth: { token },
     transports: ['websocket'],
     reconnectionAttempts: 5,

@@ -4,8 +4,9 @@ import { Lock, Mail, User, Eye, EyeOff, Sparkles, ArrowRight } from 'lucide-reac
 import toast from 'react-hot-toast';
 import axiosInstance from '../utils/axiosInstance';
 import useAuthStore from '../store/authStore';
+import { getGoogleAuthUrl } from '../utils/runtimeConfig';
 
-const GOOGLE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/auth/google`;
+const GOOGLE_URL = getGoogleAuthUrl();
 
 /* ── Echo Logo ── */
 const EchoMark = ({ size = 32 }) => (

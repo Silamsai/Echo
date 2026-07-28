@@ -3,8 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { MessageSquare, Lock, Mic, Globe, Shield, Mail, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useAuthStore from '../store/authStore';
+import { getGoogleAuthUrl } from '../utils/runtimeConfig';
 
-const GOOGLE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/auth/google`;
+const GOOGLE_URL = getGoogleAuthUrl();
 
 const EchoMark = ({ size = 32 }) => (
   <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
