@@ -13,6 +13,16 @@ const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
  * Returns { buffer, mimetype, originalname, size } or null.
  */
 export const parseFile = async (c, fieldName = 'file') => {
+    const contentType = c.req.header('content-type') || '';
+    if (contentType.includes('application/json')) {
+        try {
+            const body = await c.req.json();
+            return { body, file: null };
+        } catch (err) {
+            return { body: {}, file: null };
+        }
+    }
+
     const body = await c.req.parseBody();
     const file = body[fieldName];
 
