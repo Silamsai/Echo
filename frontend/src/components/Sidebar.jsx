@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Radio, Plus, X, Home, Building2, Users, Hash } from 'lucide-react';
+import { Search, Radio, Plus, X, Home, Building2, Users, Hash, ArrowLeft, Share2 } from 'lucide-react';
 import { BsPinAngleFill, BsVolumeMuteFill, BsTrash3Fill, BsBoxArrowRight } from 'react-icons/bs';
 import useAuthStore from '../store/authStore';
 import useChatStore from '../store/chatStore';
@@ -18,6 +18,8 @@ const Sidebar = ({ onSelectConversation, activeConversation }) => {
     activeWorkspace,
     setActiveWorkspace,
     fetchWorkspaces,
+    sidebarTab,
+    workspaceChannels,
   } = useWorkspaceStore();
 
   const [search, setSearch] = useState('');
@@ -31,12 +33,77 @@ const Sidebar = ({ onSelectConversation, activeConversation }) => {
   const [selectedContacts, setSelectedContacts] = useState([]);
   const [contextMenu, setContextMenu] = useState(null);
 
-  const handleContextMenu = (e, conv) => {
+  const getWorkspaceInitials = (name) => {
+    return name ? name.slice(0, 2).toUpperCase() : 'WS';
+  };
+
+  const getWorkspaceColor = (name) => {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const h = Math.abs(hash % 360);
+    return `hsl(${h}, 50%, 45%)`;
+  };
+
+  const handleTogglePinWorkspace = async (ws) => {
+    const isPinned = user?.pinnedWorkspaces?.includes(ws._id);
+    const endpoint = isPinned ? `/user/unpin-workspace/${ws._id}` : `/user/pin-workspace/${ws._id}`;
+    try {
+      const { data } = await axiosInstance.put(endpoint);
+      useAuthStore.getState().updateUser({ pinnedWorkspaces: data.pinnedWorkspaces });
+      toast.success(isPinned ? 'Workspace unpinned' : 'Workspace pinned');
+    } catch {
+      toast.error('Failed to update workspace settings.');
+    }
+    setContextMenu(null);
+  };
+
+  const handleToggleMuteWorkspace = async (ws) => {
+    const isMuted = user?.mutedWorkspaces?.includes(ws._id);
+    const endpoint = isMuted ? `/user/unmute-workspace/${ws._id}` : `/user/mute-workspace/${ws._id}`;
+    try {
+      const { data } = await axiosInstance.put(endpoint);
+      useAuthStore.getState().updateUser({ mutedWorkspaces: data.mutedWorkspaces });
+      toast.success(isMuted ? 'Workspace unmuted' : 'Workspace muted');
+    } catch {
+      toast.error('Failed to update workspace settings.');
+    }
+    setContextMenu(null);
+  };
+
+  const handleDeleteWorkspace = async (ws) => {
+    const confirmText = ws.owner === user?._id
+      ? 'Delete workspace? This will erase all channels and messages.'
+      : 'Leave workspace?';
+    if (!window.confirm(confirmText)) return;
+    try {
+      const { deleteWorkspace } = useWorkspaceStore.getState();
+      await deleteWorkspace(ws._id);
+      toast.success(ws.owner === user?._id ? 'Workspace deleted' : 'Left workspace');
+    } catch {
+      toast.error('Failed to delete/leave workspace.');
+    }
+    setContextMenu(null);
+  };
+
+  const handleCopyInviteCode = (ws) => {
+    if (ws?.code) {
+      navigator.clipboard.writeText(ws.code);
+      toast.success('Workspace invite code copied!');
+    } else {
+      toast.error('No invite code available.');
+    }
+    setContextMenu(null);
+  };
+
+  const handleContextMenu = (e, item, type = 'conv') => {
     e.preventDefault();
     setContextMenu({
       x: e.clientX,
       y: e.clientY,
-      conv,
+      item,
+      type,
     });
   };
 
@@ -188,6 +255,25 @@ const Sidebar = ({ onSelectConversation, activeConversation }) => {
     }
   };
 
+  // Filter active workspace channels
+  const filteredWorkspaceChannels = workspaceChannels.filter(c => {
+    if (!search.trim()) return true;
+    return c.name.toLowerCase().includes(search.toLowerCase());
+  });
+
+  // Filter and sort workspaces
+  const filteredWorkspaces = workspaces.filter(ws => {
+    if (!search.trim()) return true;
+    return ws.name.toLowerCase().includes(search.toLowerCase());
+  });
+
+  const sortedWorkspaces = [...filteredWorkspaces].sort((a, b) => {
+    const aPinned = user?.pinnedWorkspaces?.includes(a._id) ? 1 : 0;
+    const bPinned = user?.pinnedWorkspaces?.includes(b._id) ? 1 : 0;
+    if (aPinned !== bPinned) return bPinned - aPinned;
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
   return (
     <div
       className="sidebar flex flex-col h-full w-full select-none"
@@ -200,27 +286,48 @@ const Sidebar = ({ onSelectConversation, activeConversation }) => {
         className="px-4 py-5 flex items-center justify-between flex-shrink-0"
         style={{ borderBottom: '1px solid var(--border-primary)' }}
       >
-        <div>
-          <div
-            className="leading-none font-black tracking-tight"
-            style={{
-              fontSize: '18px',
-              background: 'linear-gradient(90deg, #7b6ef6, #6eb5ff)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              fontFamily: '"Plus Jakarta Sans", -apple-system, sans-serif',
-            }}
-          >
-            {activeWorkspace ? activeWorkspace.name : 'echo'}
+        {sidebarTab === 'workspaces' && activeWorkspace !== null ? (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setActiveWorkspace(null)}
+              className="mr-1 hover:text-[var(--accent)] transition cursor-pointer p-1 rounded-lg flex items-center justify-center hover:bg-white/5 text-zinc-400 hover:text-white"
+              title="Back to workspaces"
+            >
+              <ArrowLeft size={16} />
+            </button>
+            <div>
+              <div
+                className="leading-none font-black tracking-tight text-[16px] text-white"
+                style={{ fontFamily: '"Plus Jakarta Sans", -apple-system, sans-serif' }}
+              >
+                {activeWorkspace.name}
+              </div>
+              <div className="text-[8px] font-mono tracking-[1px] uppercase mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                Workspace Channels
+              </div>
+            </div>
           </div>
-          <div className="text-[8px] font-mono tracking-[1.5px] uppercase mt-0.5" style={{ color: 'var(--text-muted)' }}>
-            {activeWorkspace ? 'Workspace Channels' : 'Direct Messages'}
+        ) : (
+          <div>
+            <div
+              className="leading-none font-black tracking-tight"
+              style={{
+                fontSize: '18px',
+                background: 'linear-gradient(90deg, #7b6ef6, #6eb5ff)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                fontFamily: '"Plus Jakarta Sans", -apple-system, sans-serif',
+              }}
+            >
+              {sidebarTab === 'workspaces' ? 'workspaces' : 'echo'}
+            </div>
+            <div className="text-[8px] font-mono tracking-[1.5px] uppercase mt-0.5" style={{ color: 'var(--text-muted)' }}>
+              {sidebarTab === 'workspaces' ? 'Available spaces' : 'Direct Messages'}
+            </div>
           </div>
-        </div>
+        )}
       </div>
-
-
 
       <div className="px-3 py-3 relative flex-shrink-0">
         <Search
@@ -237,7 +344,7 @@ const Sidebar = ({ onSelectConversation, activeConversation }) => {
             color: 'var(--text-primary)',
             border: '1px solid var(--border-primary)',
           }}
-          placeholder="Search chats…"
+          placeholder={sidebarTab === 'workspaces' ? (activeWorkspace ? "Search channels…" : "Search workspaces…") : "Search chats…"}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onFocus={(e) => { e.target.style.borderColor = 'var(--border-focus)'; }}
@@ -249,49 +356,170 @@ const Sidebar = ({ onSelectConversation, activeConversation }) => {
         className="font-mono text-[9px] tracking-[2px] uppercase px-4 pt-3 pb-1.5 flex-shrink-0 flex items-center justify-between border-t border-white/5"
         style={{ color: 'var(--text-muted)' }}
       >
-        <span>{activeWorkspace ? 'Channels' : 'Conversations'}</span>
+        <span>
+          {sidebarTab === 'chats' ? 'Conversations' : (activeWorkspace ? 'Channels' : 'Workspaces')}
+        </span>
         <button
-          onClick={() => (activeWorkspace ? setChannelModalOpen(true) : setGroupModalOpen(true))}
+          onClick={() => {
+            if (sidebarTab === 'chats') setGroupModalOpen(true);
+            else if (activeWorkspace) setChannelModalOpen(true);
+            else setWsModalOpen(true);
+          }}
           className="hover:text-[var(--accent)] transition cursor-pointer p-0.5 flex items-center justify-center rounded"
-          title={activeWorkspace ? 'Create Channel' : 'Create Group'}
+          title={sidebarTab === 'chats' ? 'Create Group' : (activeWorkspace ? 'Create Channel' : 'Create Workspace')}
         >
           <Plus size={12} />
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1 pb-20 md:pb-2">
-        {filtered.length === 0 && (
-          <div className="text-center py-12 font-mono text-[11px]" style={{ color: 'var(--text-muted)' }}>
-            {conversations.length === 0 ? (
-              <div className="px-4 flex flex-col items-center gap-2">
+        {/* Chats Mode list */}
+        {sidebarTab === 'chats' && (
+          <>
+            {filtered.length === 0 && (
+              <div className="text-center py-12 font-mono text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                {conversations.length === 0 ? (
+                  <div className="px-4 flex flex-col items-center gap-2">
+                    <div
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center mb-1"
+                      style={{ background: 'var(--accent-glow)', border: '1px solid var(--accent-border)' }}
+                    >
+                      <Radio size={20} style={{ color: 'var(--accent)' }} />
+                    </div>
+                    <p className="font-semibold" style={{ color: 'var(--text-secondary)' }}>No active chats</p>
+                    <p className="text-[9px]" style={{ color: 'var(--text-muted)' }}>
+                      Search contacts to start chatting
+                    </p>
+                  </div>
+                ) : (
+                  <p>No chats found</p>
+                )}
+              </div>
+            )}
+            {sortedFiltered.map((conv) => (
+              <div
+                key={conv._id}
+                onContextMenu={(e) => handleContextMenu(e, conv, 'conv')}
+              >
+                <ConversationItem
+                  conversation={conv}
+                  isActive={currentActive?._id === conv._id}
+                  onClick={() => handleSelectConv(conv)}
+                />
+              </div>
+            ))}
+          </>
+        )}
+
+        {/* Workspaces list Mode */}
+        {sidebarTab === 'workspaces' && activeWorkspace === null && (
+          <>
+            {sortedWorkspaces.length === 0 && (
+              <div className="px-4 py-8 flex flex-col items-center text-center gap-4 overflow-y-auto">
                 <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-1"
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center"
                   style={{ background: 'var(--accent-glow)', border: '1px solid var(--accent-border)' }}
                 >
-                  <Radio size={20} style={{ color: 'var(--accent)' }} />
+                  <Building2 size={22} style={{ color: 'var(--accent)' }} />
                 </div>
-                <p className="font-semibold" style={{ color: 'var(--text-secondary)' }}>No active chats</p>
-                <p className="text-[9px]" style={{ color: 'var(--text-muted)' }}>
-                  {activeWorkspace ? 'Create a channel or switch workspaces from the rail.' : 'Search contacts to start chatting'}
-                </p>
+                <div>
+                  <p className="font-semibold text-white text-sm">No Workspaces Joined</p>
+                  <p className="text-[10px] text-slate-400 mt-1 max-w-[200px]">
+                    Create a brand new workspace or enter code to join an existing one.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 w-full max-w-[200px] mt-2">
+                  <button
+                    onClick={() => setWsModalOpen(true)}
+                    className="w-full btn-primary text-xs font-semibold py-2 px-3 rounded-lg cursor-pointer"
+                  >
+                    Create Workspace
+                  </button>
+                  <button
+                    onClick={() => setWsModalOpen(true)}
+                    className="w-full text-xs font-semibold py-2 px-3 rounded-lg border border-zinc-700 hover:border-zinc-500 text-zinc-300 transition duration-150 cursor-pointer"
+                  >
+                    Join Workspace
+                  </button>
+                </div>
               </div>
-            ) : (
-              <p>No chats found</p>
             )}
-          </div>
+            {sortedWorkspaces.map((ws) => {
+              const initials = getWorkspaceInitials(ws.name);
+              const color = getWorkspaceColor(ws.name);
+              const isPinned = user?.pinnedWorkspaces?.includes(ws._id);
+              const isMuted = user?.mutedWorkspaces?.includes(ws._id);
+              const isOwner = ws.owner === user?._id;
+
+              return (
+                <div
+                  key={ws._id}
+                  onContextMenu={(e) => handleContextMenu(e, ws, 'workspace')}
+                  onClick={() => setActiveWorkspace(ws)}
+                  className="w-full flex items-center justify-between p-3 rounded-xl cursor-pointer transition duration-200 border border-transparent active:scale-[0.99] group mt-1"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    border: '1px solid rgba(255, 255, 255, 0.04)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.04)';
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black font-mono shadow-md text-white transition-transform duration-200 group-hover:scale-105"
+                      style={{
+                        background: `linear-gradient(135deg, ${color} 0%, rgba(15,15,22,0.6) 100%)`,
+                        border: '1.5px solid rgba(255,255,255,0.12)',
+                      }}
+                    >
+                      {initials}
+                    </div>
+
+                    <div className="flex flex-col text-left">
+                      <span className="text-[13px] font-semibold text-white group-hover:text-[var(--accent)] transition-colors duration-150">
+                        {ws.name}
+                      </span>
+                      <span className="text-[9px] font-mono text-zinc-400 mt-0.5">
+                        {ws.members?.length || 1} member{(ws.members?.length || 1) !== 1 ? 's' : ''} {isOwner && '• Owner'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {isPinned && <BsPinAngleFill size={10} style={{ color: 'var(--accent)' }} />}
+                    {isMuted && <BsVolumeMuteFill size={11} style={{ color: 'var(--text-muted)' }} />}
+                  </div>
+                </div>
+              );
+            })}
+          </>
         )}
-        {sortedFiltered.map((conv) => (
-          <div
-            key={conv._id}
-            onContextMenu={(e) => handleContextMenu(e, conv)}
-          >
-            <ConversationItem
-              conversation={conv}
-              isActive={currentActive?._id === conv._id}
-              onClick={() => handleSelectConv(conv)}
-            />
-          </div>
-        ))}
+
+        {/* Workspace Channels Mode list */}
+        {sidebarTab === 'workspaces' && activeWorkspace !== null && (
+          <>
+            {filteredWorkspaceChannels.length === 0 && (
+              <div className="text-center py-12 font-mono text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                <p>No channels found</p>
+              </div>
+            )}
+            {filteredWorkspaceChannels.map((c) => (
+              <div key={c._id}>
+                <ConversationItem
+                  conversation={c}
+                  isActive={currentActive?._id === c._id}
+                  onClick={() => handleSelectConv(c)}
+                />
+              </div>
+            ))}
+          </>
+        )}
       </div>
 
       {channelModalOpen && (
@@ -527,74 +755,172 @@ const Sidebar = ({ onSelectConversation, activeConversation }) => {
             }}
             className="fade-in-quick"
           >
-            <button
-              onClick={() => handleTogglePin(contextMenu.conv)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                width: '100%',
-                padding: '8px 12px',
-                fontSize: '11px',
-                color: 'var(--text-secondary)',
-                background: 'transparent',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                textAlign: 'left',
-              }}
-              className="hover:bg-white/5 hover:text-white"
-            >
-              <BsPinAngleFill size={11} style={{ color: 'var(--accent)' }} />
-              <span>{user?.pinnedConversations?.includes(contextMenu.conv._id) ? 'Unpin Chat' : 'Pin Chat'}</span>
-            </button>
-            <button
-              onClick={() => handleToggleMute(contextMenu.conv)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                width: '100%',
-                padding: '8px 12px',
-                fontSize: '11px',
-                color: 'var(--text-secondary)',
-                background: 'transparent',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                textAlign: 'left',
-              }}
-              className="hover:bg-white/5 hover:text-white"
-            >
-              <BsVolumeMuteFill size={12} style={{ color: 'var(--text-muted)' }} />
-              <span>{user?.mutedConversations?.includes(contextMenu.conv._id) ? 'Unmute Chat' : 'Mute Chat'}</span>
-            </button>
-            <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '4px 0' }} />
-            <button
-              onClick={() => handleDeleteChat(contextMenu.conv)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                width: '100%',
-                padding: '8px 12px',
-                fontSize: '11px',
-                color: '#ef4444',
-                background: 'transparent',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                textAlign: 'left',
-              }}
-              className="hover:bg-red-500/10 hover:text-red-400"
-            >
-              {contextMenu.conv.isGroup && contextMenu.conv.groupAdmin !== user?._id ? (
-                <BsBoxArrowRight size={12} />
-              ) : (
-                <BsTrash3Fill size={11} />
-              )}
-              <span>{contextMenu.conv.isGroup && contextMenu.conv.groupAdmin !== user?._id ? 'Leave Group' : 'Delete Chat'}</span>
-            </button>
+            {contextMenu.type === 'workspace' ? (
+              <>
+                <button
+                  onClick={() => handleTogglePinWorkspace(contextMenu.item)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    width: '100%',
+                    padding: '8px 12px',
+                    fontSize: '11px',
+                    color: 'var(--text-secondary)',
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                  className="hover:bg-white/5 hover:text-white"
+                >
+                  <BsPinAngleFill size={11} style={{ color: 'var(--accent)' }} />
+                  <span>{user?.pinnedWorkspaces?.includes(contextMenu.item._id) ? 'Unpin Workspace' : 'Pin Workspace'}</span>
+                </button>
+                <button
+                  onClick={() => handleToggleMuteWorkspace(contextMenu.item)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    width: '100%',
+                    padding: '8px 12px',
+                    fontSize: '11px',
+                    color: 'var(--text-secondary)',
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                  className="hover:bg-white/5 hover:text-white"
+                >
+                  <BsVolumeMuteFill size={12} style={{ color: 'var(--text-muted)' }} />
+                  <span>{user?.mutedWorkspaces?.includes(contextMenu.item._id) ? 'Unmute Workspace' : 'Mute Workspace'}</span>
+                </button>
+                <button
+                  onClick={() => handleCopyInviteCode(contextMenu.item)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    width: '100%',
+                    padding: '8px 12px',
+                    fontSize: '11px',
+                    color: 'var(--text-secondary)',
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                  className="hover:bg-white/5 hover:text-white"
+                >
+                  <Share2 size={11} style={{ color: 'var(--accent)' }} />
+                  <span>Copy Invite Code</span>
+                </button>
+                <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '4px 0' }} />
+                <button
+                  onClick={() => handleDeleteWorkspace(contextMenu.item)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    width: '100%',
+                    padding: '8px 12px',
+                    fontSize: '11px',
+                    color: '#ef4444',
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                  className="hover:bg-red-500/10 hover:text-red-400"
+                >
+                  {contextMenu.item.owner === user?._id ? (
+                    <BsTrash3Fill size={11} />
+                  ) : (
+                    <BsBoxArrowRight size={12} />
+                  )}
+                  <span>{contextMenu.item.owner === user?._id ? 'Delete Workspace' : 'Leave Workspace'}</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => handleTogglePin(contextMenu.item)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    width: '100%',
+                    padding: '8px 12px',
+                    fontSize: '11px',
+                    color: 'var(--text-secondary)',
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                  className="hover:bg-white/5 hover:text-white"
+                >
+                  <BsPinAngleFill size={11} style={{ color: 'var(--accent)' }} />
+                  <span>{user?.pinnedConversations?.includes(contextMenu.item._id) ? 'Unpin Chat' : 'Pin Chat'}</span>
+                </button>
+                <button
+                  onClick={() => handleToggleMute(contextMenu.item)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    width: '100%',
+                    padding: '8px 12px',
+                    fontSize: '11px',
+                    color: 'var(--text-secondary)',
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                  className="hover:bg-white/5 hover:text-white"
+                >
+                  <BsVolumeMuteFill size={12} style={{ color: 'var(--text-muted)' }} />
+                  <span>{user?.mutedConversations?.includes(contextMenu.item._id) ? 'Unmute Chat' : 'Mute Chat'}</span>
+                </button>
+                <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '4px 0' }} />
+                <button
+                  onClick={() => handleDeleteChat(contextMenu.item)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    width: '100%',
+                    padding: '8px 12px',
+                    fontSize: '11px',
+                    color: '#ef4444',
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                  className="hover:bg-red-500/10 hover:text-red-400"
+                >
+                  {contextMenu.item.isGroup && contextMenu.item.groupAdmin === user?._id ? (
+                    <BsTrash3Fill size={11} />
+                  ) : contextMenu.item.isGroup ? (
+                    <BsBoxArrowRight size={12} />
+                  ) : (
+                    <BsTrash3Fill size={11} />
+                  )}
+                  <span>{contextMenu.item.isGroup && contextMenu.item.groupAdmin !== user?._id ? 'Leave Group' : 'Delete Chat'}</span>
+                </button>
+              </>
+            )}
           </div>
         </>
       )}

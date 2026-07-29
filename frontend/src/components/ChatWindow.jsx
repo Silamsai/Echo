@@ -3,11 +3,12 @@ import {
   Send, Image as ImageIcon, X, Mic, MicOff, Trash2,
   Info, Calendar, Mail, ShieldAlert, ArrowLeft,
   Phone, Video, VolumeX, Volume2, Ban, MessageSquareQuote,
-  Plus, Users, Copy, Check
+  Plus, Users, Copy, Check, Search, BarChart3
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import MessageBubble from './MessageBubble';
 import CallModal from './CallModal';
+import PollModal from './PollModal';
 import axiosInstance from '../utils/axiosInstance';
 import { getSocket } from '../socket/socket';
 import useChatStore from '../store/chatStore';
@@ -50,6 +51,9 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
   const [connections, setConnections] = useState([]);
   const [showAddMember, setShowAddMember] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+  const [showPollModal, setShowPollModal] = useState(false);
 
   useEffect(() => {
     if (selectedProfileUser) {
@@ -123,6 +127,12 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
   };
 
   const convMessages = useMemo(() => messages[conversationId] || [], [messages, conversationId]);
+  const filteredMessages = useMemo(() => {
+    if (!searchText.trim()) return convMessages;
+    return convMessages.filter((msg) =>
+      msg.content?.toLowerCase().includes(searchText.toLowerCase())
+    );
+  }, [convMessages, searchText]);
   const isOtherTyping = !conversation?.isGroup && typingUsers[conversationId]?.has(other?._id);
 
   /* ─── Load messages ─── */
@@ -459,6 +469,16 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
                 </button>
               )}
               <button
+                onClick={() => {
+                  setShowSearch(!showSearch);
+                  if (showSearch) setSearchText('');
+                }}
+                className={iconBtn(showSearch)}
+                title="Search Messages"
+              >
+                <Search size={15} />
+              </button>
+              <button
                 onClick={() => setShowInfo(!showInfo)}
                 className={iconBtn(showInfo)}
                 title="Conversation Info"
@@ -467,6 +487,50 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
               </button>
             </div>
           </div>
+
+          {showSearch && (
+            <div
+              className="px-4 py-2 border-b flex items-center gap-2 animate-fade-in"
+              style={{
+                background: 'var(--bg-panel)',
+                borderColor: 'var(--border-primary)',
+              }}
+            >
+              <div className="flex-1 relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input
+                  type="text"
+                  placeholder="Search messages..."
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  className="w-full rounded-lg pl-9 pr-8 py-1.5 text-xs outline-none"
+                  style={{
+                    background: 'var(--bg-input)',
+                    border: '1px solid var(--border-primary)',
+                    color: 'var(--text-primary)',
+                  }}
+                  autoFocus
+                />
+                {searchText && (
+                  <button
+                    onClick={() => setSearchText('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => {
+                  setShowSearch(false);
+                  setSearchText('');
+                }}
+                className="text-xs text-slate-400 hover:text-white px-2 py-1"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
 
           {/* Messages List */}
           <div
@@ -489,8 +553,8 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
                 </div>
               </div>
             )}
-            {convMessages.map((msg) => (
-              <MessageBubble key={msg._id} message={msg} />
+            {filteredMessages.map((msg) => (
+              <MessageBubble key={msg._id} message={msg} searchQuery={searchText} />
             ))}
             {conversation?.isGroup ? (
               getTypingText() && (
@@ -587,6 +651,18 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
                       <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
                     </>
                   )}
+
+                  <button
+                    id="poll-btn"
+                    onClick={() => setShowPollModal(true)}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-all flex-shrink-0 cursor-pointer"
+                    style={{ color: 'var(--text-muted)' }}
+                    title="Create Poll"
+                    onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--accent)'; e.currentTarget.style.background = 'var(--accent-glow)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = ''; }}
+                  >
+                    <BarChart3 size={16} />
+                  </button>
 
                   {!isRecording && !audioUrl && (
                     <textarea
@@ -935,6 +1011,13 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
           )
         )}
       </div>
+
+      <PollModal
+        open={showPollModal}
+        onClose={() => setShowPollModal(false)}
+        conversationId={conversation?._id}
+        onSuccess={(newMsg) => addMessage(newMsg)}
+      />
     </>
   );
 };

@@ -11,7 +11,23 @@ const ConversationItem = ({ conversation, isActive, onClick }) => {
 
   const other = conversation.isGroup ? null : conversation.participants?.find((p) => p._id !== user?._id);
   const avatar = conversation.isGroup ? conversation.groupAvatar : other?.avatar;
-  const isTyping = typingUsers[conversation._id]?.size > 0;
+  const getTypingText = () => {
+    const ids = typingUsers[conversation._id];
+    if (!ids || ids.size === 0) return null;
+    const typingList = Array.from(ids)
+      .filter((id) => id !== user?._id)
+      .map((id) => conversation.participants?.find((p) => p._id === id || p === id))
+      .filter(Boolean);
+    if (typingList.length === 0) return null;
+    if (conversation.isGroup) {
+      if (typingList.length === 1) return `${typingList[0].nickname || typingList[0].username} is typing…`;
+      if (typingList.length === 2) return `${typingList[0].username} and ${typingList[1].username} are typing…`;
+      return 'Several people are typing…';
+    }
+    return 'typing…';
+  };
+
+  const typingText = getTypingText();
   const lastMsg = conversation.lastMessage;
 
   const getLastMsgPreview = () => {
@@ -83,11 +99,11 @@ const ConversationItem = ({ conversation, isActive, onClick }) => {
           <p
             className="text-[11px] font-mono truncate flex-1"
             style={{
-              color: isTyping ? 'var(--accent)' : isUnread ? 'var(--text-secondary)' : 'var(--text-muted)',
-              fontWeight: isTyping || isUnread ? 600 : 400,
+              color: typingText ? 'var(--accent)' : isUnread ? 'var(--text-secondary)' : 'var(--text-muted)',
+              fontWeight: typingText || isUnread ? 600 : 400,
             }}
           >
-            {isTyping ? 'typing…' : getLastMsgPreview()}
+            {typingText || getLastMsgPreview()}
           </p>
           {isUnread && (
             <span className="w-2 h-2 rounded-full flex-shrink-0 shadow-md" style={{ background: 'var(--accent)', boxShadow: '0 0 6px var(--accent-glow)' }} />

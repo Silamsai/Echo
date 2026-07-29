@@ -161,6 +161,7 @@ const useSocket = () => {
     socket.on('message-seen', onMessageSeen);
     socket.on('force-logout', onForceLogout);
     socket.on('conversation-deleted', onConversationDeleted);
+    socket.on('poll-updated', onNewMessage);
 
     return () => {
       socket.off('new-message', onNewMessage);
@@ -174,6 +175,7 @@ const useSocket = () => {
       socket.off('message-seen', onMessageSeen);
       socket.off('force-logout', onForceLogout);
       socket.off('conversation-deleted', onConversationDeleted);
+      socket.off('poll-updated', onNewMessage);
     };
   }, [
     user,

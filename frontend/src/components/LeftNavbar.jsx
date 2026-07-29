@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MessageSquare, Search, Bell, User, Settings, Shield, LogOut, Plus, Home, Building2 } from 'lucide-react';
+import { MessageSquare, Search, Bell, User, Settings, Shield, LogOut, Plus, Home, Building2, Share2 } from 'lucide-react';
 import { BsPinAngleFill, BsVolumeMuteFill, BsTrash3Fill, BsBoxArrowRight } from 'react-icons/bs';
 import axiosInstance from '../utils/axiosInstance';
 import useAuthStore from '../store/authStore';
@@ -130,10 +130,11 @@ const LeftNavbar = () => {
     activeWorkspace,
     setActiveWorkspace,
     fetchWorkspaces,
+    sidebarTab,
+    setSidebarTab,
   } = useWorkspaceStore();
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [workspaceContextMenu, setWorkspaceContextMenu] = useState(null);
 
   useEffect(() => {
@@ -191,9 +192,16 @@ const LeftNavbar = () => {
     setWorkspaceContextMenu(null);
   };
 
+  const handleSelectTab = (tab) => {
+    setSidebarTab(tab);
+    setActiveWorkspace(null);
+    useChatStore.getState().setActiveConversation(null);
+    navigate('/');
+  };
+
   const navItems = [
-    { key: 'chats', icon: MessageSquare, path: '/', label: 'Chats' },
-    { key: 'workspaces', icon: Building2, label: 'Workspaces', onClick: () => setDropdownOpen(!dropdownOpen) },
+    { key: 'chats', icon: MessageSquare, label: 'Chats', onClick: () => handleSelectTab('chats') },
+    { key: 'workspaces', icon: Building2, label: 'Workspaces', onClick: () => handleSelectTab('workspaces') },
     { key: 'search', icon: Search, path: '/search', label: 'Search' },
     { key: 'requests', icon: Bell, path: '/notifications', label: 'Requests', badge: unreadCount },
     { key: 'profile', icon: User, path: '/profile', label: 'Profile' },
@@ -324,7 +332,9 @@ const LeftNavbar = () => {
 
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', width: '100%', padding: '0 12px', position: 'relative', zIndex: 1 }}>
             {navItems.map((item) => {
-              const isActive = item.key === 'workspaces' ? dropdownOpen : item.path ? location.pathname === item.path : false;
+              const isActive = location.pathname === '/'
+                ? (item.key === 'chats' ? sidebarTab === 'chats' : item.key === 'workspaces' ? sidebarTab === 'workspaces' : false)
+                : (item.path ? location.pathname === item.path : false);
               const CustomIconUrl = config?.sidebarIcons?.[item.key];
               const customItem = CustomIconUrl ? { ...item, customIconUrl: CustomIconUrl } : item;
 
@@ -340,64 +350,7 @@ const LeftNavbar = () => {
           </div>
         </div>
 
-        {location.pathname === '/' && (
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            width: '100%',
-            flex: 1,
-            overflowY: 'auto',
-            padding: '10px 0',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            gap: '8px',
-          }} className="no-scrollbar">
-            <div style={{ width: '32px', height: '1px', background: 'var(--ln-border)', margin: '4px 0' }} />
 
-            <button
-              onClick={() => setActiveWorkspace(null)}
-              title="Direct Messages"
-              style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: activeWorkspace === null ? '12px' : '20px',
-                background: activeWorkspace === null ? 'var(--accent-glow)' : 'var(--bg-panel)',
-                border: activeWorkspace === null ? '1.5px solid var(--accent-border)' : '1px solid var(--border-primary)',
-                color: activeWorkspace === null ? 'var(--accent)' : 'var(--text-secondary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                outline: 'none',
-              }}
-              className="ws-item active:scale-95"
-            >
-              <Home size={16} />
-            </button>
-
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              title="Workspaces list"
-              style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: activeWorkspace !== null ? '12px' : '20px',
-                background: activeWorkspace !== null ? 'var(--accent-glow)' : 'var(--bg-panel)',
-                border: activeWorkspace !== null ? '1.5px solid var(--accent-border)' : '1px solid var(--border-primary)',
-                color: activeWorkspace !== null ? 'var(--accent)' : 'var(--text-secondary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                outline: 'none',
-              }}
-              className="ws-item active:scale-95 text-xs font-mono font-bold"
-            >
-              {activeWorkspace ? activeWorkspace.name?.slice(0, 2).toUpperCase() : <Building2 size={16} />}
-            </button>
-          </div>
-        )}
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', position: 'relative', zIndex: 1 }}>
           <div
@@ -453,7 +406,9 @@ const LeftNavbar = () => {
             userSelect: 'none',
           }} className="ln-mobile">
             {navItems.map((item) => {
-              const isActive = item.key === 'workspaces' ? dropdownOpen : item.path ? location.pathname === item.path : false;
+              const isActive = location.pathname === '/'
+                ? (item.key === 'chats' ? sidebarTab === 'chats' : item.key === 'workspaces' ? sidebarTab === 'workspaces' : false)
+                : (item.path ? location.pathname === item.path : false);
               const CustomIconUrl = config?.sidebarIcons?.[item.key];
               const Icon = item.icon;
 
@@ -492,180 +447,7 @@ const LeftNavbar = () => {
         )
       }
 
-      {dropdownOpen && (
-        <>
-          <div
-            style={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 998,
-              background: 'transparent',
-            }}
-            onClick={() => setDropdownOpen(false)}
-          />
-          <div
-            style={{
-              position: 'fixed',
-              left: '80px',
-              bottom: '80px',
-              width: '260px',
-              background: 'rgba(15, 15, 22, 0.95)',
-              backdropFilter: 'blur(16px)',
-              border: '1px solid var(--border-primary)',
-              borderRadius: '16px',
-              padding: '16px',
-              boxShadow: '0 15px 40px rgba(0,0,0,0.6)',
-              zIndex: 999,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-            }}
-            className="ws-popover fade-in-quick"
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '1px' }}>
-                WORKSPACES
-              </span>
-              <button
-                onClick={() => {
-                  setDropdownOpen(false);
-                  setModalOpen(true);
-                }}
-                title="Create Workspace"
-                style={{
-                  background: 'var(--accent-glow)',
-                  border: '1.5px solid var(--accent-border)',
-                  borderRadius: '10px',
-                  width: '28px',
-                  height: '28px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--accent)',
-                  cursor: 'pointer',
-                }}
-                className="hover:scale-105 active:scale-95 transition"
-              >
-                <Plus size={14} />
-              </button>
-            </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '250px', overflowY: 'auto' }} className="no-scrollbar">
-              <div
-                onClick={() => {
-                  setActiveWorkspace(null);
-                  setDropdownOpen(false);
-                  navigate('/');
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  padding: '8px 12px',
-                  borderRadius: '10px',
-                  background: activeWorkspace === null ? 'var(--accent-glow)' : 'var(--bg-panel)',
-                  border: activeWorkspace === null ? '1px solid var(--accent-border)' : '1px solid var(--border-primary)',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s',
-                }}
-                className="ws-list-item hover:border-indigo-500/50"
-              >
-                <div
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '8px',
-                    background: activeWorkspace === null ? 'var(--accent)' : 'rgba(255,255,255,0.06)',
-                    color: activeWorkspace === null ? '#ffffff' : 'var(--text-secondary)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Home size={14} />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ fontSize: '12px', fontWeight: activeWorkspace === null ? 800 : 700, color: 'var(--text-primary)' }}>
-                    Direct Messages
-                  </span>
-                  <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>
-                    Home space
-                  </span>
-                </div>
-              </div>
-
-              {sortedWorkspaces.map((ws) => {
-                const isActive = activeWorkspace?._id === ws._id;
-                const isPinned = user?.pinnedWorkspaces?.includes(ws._id);
-                const isMuted = user?.mutedWorkspaces?.includes(ws._id);
-                const initials = ws.name ? ws.name.slice(0, 2).toUpperCase() : 'WS';
-
-                return (
-                  <div
-                    key={ws._id}
-                    onClick={() => {
-                      setActiveWorkspace(ws);
-                      setDropdownOpen(false);
-                      navigate('/');
-                    }}
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      setWorkspaceContextMenu({
-                        x: e.clientX,
-                        y: e.clientY,
-                        workspace: ws,
-                      });
-                    }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '8px 12px',
-                      borderRadius: '10px',
-                      background: isActive ? 'var(--accent-glow)' : 'var(--bg-panel)',
-                      border: isActive ? '1px solid var(--accent-border)' : '1px solid var(--border-primary)',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s',
-                    }}
-                    className="ws-list-item hover:border-indigo-500/50"
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '8px',
-                          background: isActive ? 'var(--accent)' : 'rgba(255,255,255,0.06)',
-                          color: isActive ? '#ffffff' : 'var(--text-secondary)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '10px',
-                          fontWeight: 800,
-                        }}
-                      >
-                        {initials}
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontSize: '12px', fontWeight: isActive ? 800 : 700, color: 'var(--text-primary)', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {ws.name}
-                        </span>
-                        <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>
-                          {ws.members?.length || 1} member{(ws.members?.length || 1) !== 1 ? 's' : ''}
-                        </span>
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      {isPinned && <BsPinAngleFill size={10} style={{ color: 'var(--accent)' }} />}
-                      {isMuted && <BsVolumeMuteFill size={11} style={{ color: 'var(--text-muted)' }} />}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </>
-      )}
 
       {workspaceContextMenu && (
         <>
@@ -742,6 +524,36 @@ const LeftNavbar = () => {
             >
               <BsVolumeMuteFill size={12} style={{ color: 'var(--text-muted)' }} />
               <span>{user?.mutedWorkspaces?.includes(workspaceContextMenu.workspace._id) ? 'Unmute Workspace' : 'Mute Workspace'}</span>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (workspaceContextMenu.workspace?.code) {
+                  navigator.clipboard.writeText(workspaceContextMenu.workspace.code);
+                  toast.success('Workspace invite code copied!');
+                } else {
+                  toast.error('No invite code available.');
+                }
+                setWorkspaceContextMenu(null);
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                width: '100%',
+                padding: '8px 12px',
+                fontSize: '11px',
+                color: 'var(--text-secondary)',
+                background: 'transparent',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                textAlign: 'left',
+              }}
+              className="hover:bg-white/5 hover:text-white"
+            >
+              <Share2 size={11} style={{ color: 'var(--accent)' }} />
+              <span>Copy Invite Code</span>
             </button>
             <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '4px 0' }} />
             <button
