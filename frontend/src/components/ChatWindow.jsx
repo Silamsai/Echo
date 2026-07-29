@@ -31,7 +31,10 @@ const getChatThemeClass = () => {
 
 const ChatWindow = ({ conversation: initialConversation, onBack }) => {
   const { user, updateUser } = useAuthStore();
-  const { conversations, messages, setMessages, typingUsers, addMessage, updateLastMessage } = useChatStore();
+  const {
+    conversations, messages, setMessages, typingUsers,
+    addMessage, updateLastMessage, selectedProfileUser, setSelectedProfileUser
+  } = useChatStore();
   const { config } = useConfigStore();
 
   const conversation = useMemo(() => {
@@ -47,6 +50,17 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
   const [connections, setConnections] = useState([]);
   const [showAddMember, setShowAddMember] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+
+  useEffect(() => {
+    if (selectedProfileUser) {
+      setShowInfo(true);
+    }
+  }, [selectedProfileUser]);
+
+  useEffect(() => {
+    setSelectedProfileUser(null);
+    setShowInfo(false);
+  }, [initialConversation?._id, setSelectedProfileUser]);
 
   useEffect(() => {
     if (showInfo && conversation?.isGroup) {
@@ -363,10 +377,24 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
               borderBottom: '1px solid var(--border-primary)',
             }}
           >
-            <div className="flex items-center gap-3">
+            <div
+              className="flex items-center gap-3 cursor-pointer select-none group"
+              onClick={() => {
+                if (conversation?.isGroup) {
+                  setSelectedProfileUser(null);
+                  setShowInfo(!showInfo);
+                } else {
+                  setSelectedProfileUser(other);
+                  setShowInfo(!showInfo);
+                }
+              }}
+            >
               {onBack && (
                 <button
-                  onClick={onBack}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onBack();
+                  }}
                   className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center transition-all flex-shrink-0 cursor-pointer"
                   style={{ color: 'var(--text-muted)' }}
                   title="Back"
@@ -374,7 +402,7 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
                   <ArrowLeft size={18} />
                 </button>
               )}
-              <div className="relative flex-shrink-0">
+              <div className="relative flex-shrink-0 group-hover:scale-105 transition-transform">
                 <img
                   src={conversation?.isGroup ? (conversation.groupAvatar || getFallbackGroupAvatar(conversation.name)) : getAvatar(other)}
                   alt={conversation?.isGroup ? conversation.name : other?.username}
@@ -388,7 +416,7 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
                 )}
               </div>
               <div>
-                <p className="text-sm font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>
+                <p className="text-sm font-bold leading-tight group-hover:text-indigo-400 transition-colors" style={{ color: 'var(--text-primary)' }}>
                   {conversation?.isGroup
                     ? (conversation.workspace ? `#${conversation.name}` : conversation.name)
                     : (other?.nickname || other?.username)}
@@ -624,7 +652,7 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
 
         {/* ── RIGHT PROFILE PANEL ── */}
         {showInfo && (
-          conversation?.isGroup ? (
+          (conversation?.isGroup && !selectedProfileUser) ? (
             <div
               className="w-[220px] md:w-[240px] h-full flex flex-col overflow-y-auto p-4 md:p-5 animate-slide-in-right z-30 flex-shrink-0"
               style={{ background: 'var(--bg-surface)', borderLeft: '1px solid var(--border-primary)' }}
@@ -737,12 +765,16 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
                       const isUserAdmin = (conversation.groupAdmin?._id || conversation.groupAdmin) === p._id ||
                         useWorkspaceStore.getState().activeWorkspace?.owner === p._id;
                       return (
-                        <div key={p._id} className="flex items-center justify-between text-xs">
+                        <div
+                          key={p._id}
+                          onClick={() => setSelectedProfileUser(p)}
+                          className="flex items-center justify-between text-xs cursor-pointer hover:text-indigo-400 group/item transition-colors"
+                        >
                           <div className="flex items-center gap-2 min-w-0">
                             <img
                               src={getAvatar(p)}
                               alt=""
-                              className="w-5 h-5 rounded object-cover"
+                              className="w-5 h-5 rounded object-cover group-hover/item:scale-105 transition-transform"
                             />
                             <span className="truncate" style={{ color: 'var(--text-primary)' }}>
                               {p.nickname || p.username}
@@ -791,90 +823,110 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
             >
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-[10px] font-mono tracking-[2.5px] uppercase" style={{ color: 'var(--text-muted)' }}>Profile Info</h3>
-                <button onClick={() => setShowInfo(false)} className="cursor-pointer" style={{ color: 'var(--text-muted)' }}>
+                <button onClick={() => { setShowInfo(false); setSelectedProfileUser(null); }} className="cursor-pointer" style={{ color: 'var(--text-muted)' }}>
                   <X size={15} />
                 </button>
               </div>
 
-              <div className="flex flex-col items-center text-center pb-5 mb-5" style={{ borderBottom: '1px solid var(--border-primary)' }}>
-                <img src={getAvatar(other)} alt="" className="w-16 h-16 rounded-xl object-cover mb-3.5" style={{ border: '1px solid var(--border-primary)' }} />
-                <h4 className="text-sm font-extrabold leading-none" style={{ color: 'var(--text-primary)' }}>{other?.nickname || other?.username}</h4>
-                <div className={`mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-mono border ${other?.isOnline
-                  ? 'bg-green-500/5 text-green-400 border-green-500/20'
-                  : 'text-slate-500 border-slate-500/20'
-                  }`} style={!other?.isOnline ? { background: 'var(--bg-panel)' } : {}}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${other?.isOnline ? 'bg-green-400' : 'bg-slate-600'}`} />
-                  {other?.isOnline ? 'online' : 'offline'}
-                </div>
-              </div>
+              {conversation?.isGroup && selectedProfileUser && (
+                <button
+                  onClick={() => setSelectedProfileUser(null)}
+                  className="flex items-center gap-1.5 mb-5 text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition cursor-pointer select-none"
+                >
+                  <ArrowLeft size={11} /> Back to Group Info
+                </button>
+              )}
 
-              <div className="space-y-4 flex-1">
-                <div>
-                  <span className="text-[9px] font-mono tracking-wider uppercase block mb-1" style={{ color: 'var(--text-muted)' }}>About</span>
-                  <p className="text-xs leading-relaxed" style={{ color: 'var(--text-primary)' }}>
-                    {other?.bio || <span className="italic" style={{ color: 'var(--text-muted)' }}>No bio written yet.</span>}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-[9px] font-mono tracking-wider uppercase mb-1.5 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
-                    <Mail size={10} /> Email
-                  </span>
-                  <p className="text-xs truncate select-text" style={{ color: 'var(--text-secondary)' }} title={other?.email}>{other?.email}</p>
-                </div>
-                <div>
-                  <span className="text-[9px] font-mono tracking-wider uppercase mb-1.5 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
-                    <ShieldAlert size={10} /> Account Type
-                  </span>
-                  <p className="text-xs font-mono" style={{ color: 'var(--text-secondary)' }}>
-                    {other?.isAdmin ? 'Administrator' : 'General Member'}
-                  </p>
-                </div>
-                {other?.createdAt && (
-                  <div>
-                    <span className="text-[9px] font-mono tracking-wider uppercase mb-1.5 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
-                      <Calendar size={10} /> Member Since
-                    </span>
-                    <p className="text-xs font-mono" style={{ color: 'var(--text-secondary)' }}>
-                      {new Date(other.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
-                    </p>
-                  </div>
-                )}
+              {(() => {
+                const profileUser = selectedProfileUser || other;
+                const isBlockedUser = profileUser ? user?.blockedUsers?.includes(profileUser._id) : false;
 
-                {/* Privacy Section */}
-                <div className="pt-3 space-y-2" style={{ borderTop: '1px solid var(--border-primary)' }}>
-                  <span className="text-[9px] font-mono tracking-wider uppercase block mb-2" style={{ color: 'var(--text-muted)' }}>Privacy</span>
-                  <div className="flex flex-col gap-1.5">
-                    <button
-                      onClick={handleToggleMute}
-                      className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-all duration-150 cursor-pointer"
-                      style={{
-                        background: 'var(--bg-panel)',
-                        border: '1px solid var(--border-primary)',
-                        color: 'var(--text-secondary)',
-                      }}
-                    >
-                      <span className="flex items-center gap-2">
-                        {isChatMuted ? <Volume2 size={12} /> : <VolumeX size={12} />}
-                        {isChatMuted ? 'Unmute Chat' : 'Mute Chat'}
-                      </span>
-                      {isChatMuted && <span className="text-[9px] font-bold" style={{ color: 'var(--accent)' }}>MUTED</span>}
-                    </button>
-                    <button
-                      onClick={handleToggleBlock}
-                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-all duration-150 cursor-pointer ${isBlocked
-                        ? 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20'
-                        : 'hover:border-red-500/20 hover:bg-red-500/10 hover:text-red-400'
-                        }`}
-                      style={!isBlocked ? { background: 'var(--bg-panel)', border: '1px solid var(--border-primary)', color: 'var(--text-secondary)' } : {}}
-                    >
-                      <span className="flex items-center gap-2">
-                        <Ban size={12} />
-                        {isBlocked ? 'Unblock User' : 'Block User'}
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              </div>
+                return (
+                  <>
+                    <div className="flex flex-col items-center text-center pb-5 mb-5" style={{ borderBottom: '1px solid var(--border-primary)' }}>
+                      <img src={getAvatar(profileUser)} alt="" className="w-16 h-16 rounded-xl object-cover mb-3.5" style={{ border: '1px solid var(--border-primary)' }} />
+                      <h4 className="text-sm font-extrabold leading-none" style={{ color: 'var(--text-primary)' }}>{profileUser?.nickname || profileUser?.username}</h4>
+                      <div className={`mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-mono border ${profileUser?.isOnline
+                        ? 'bg-green-500/5 text-green-400 border-green-500/20'
+                        : 'text-slate-500 border-slate-500/20'
+                        }`} style={!profileUser?.isOnline ? { background: 'var(--bg-panel)' } : {}}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${profileUser?.isOnline ? 'bg-green-400' : 'bg-slate-600'}`} />
+                        {profileUser?.isOnline ? 'online' : 'offline'}
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 flex-1">
+                      <div>
+                        <span className="text-[9px] font-mono tracking-wider uppercase block mb-1" style={{ color: 'var(--text-muted)' }}>About</span>
+                        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+                          {profileUser?.bio || <span className="italic" style={{ color: 'var(--text-muted)' }}>No bio written yet.</span>}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-mono tracking-wider uppercase mb-1.5 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+                          <Mail size={10} /> Email
+                        </span>
+                        <p className="text-xs truncate select-text" style={{ color: 'var(--text-secondary)' }} title={profileUser?.email}>{profileUser?.email}</p>
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-mono tracking-wider uppercase mb-1.5 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+                          <ShieldAlert size={10} /> Account Type
+                        </span>
+                        <p className="text-xs font-mono" style={{ color: 'var(--text-secondary)' }}>
+                          {profileUser?.isAdmin ? 'Administrator' : 'General Member'}
+                        </p>
+                      </div>
+                      {profileUser?.createdAt && (
+                        <div>
+                          <span className="text-[9px] font-mono tracking-wider uppercase mb-1.5 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+                            <Calendar size={10} /> Member Since
+                          </span>
+                          <p className="text-xs font-mono" style={{ color: 'var(--text-secondary)' }}>
+                            {new Date(profileUser.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Privacy Section */}
+                      {profileUser && profileUser._id !== user?._id && (
+                        <div className="pt-3 space-y-2" style={{ borderTop: '1px solid var(--border-primary)' }}>
+                          <span className="text-[9px] font-mono tracking-wider uppercase block mb-2" style={{ color: 'var(--text-muted)' }}>Privacy</span>
+                          <div className="flex flex-col gap-1.5">
+                            <button
+                              onClick={handleToggleMute}
+                              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-all duration-150 cursor-pointer"
+                              style={{
+                                background: 'var(--bg-panel)',
+                                border: '1px solid var(--border-primary)',
+                                color: 'var(--text-secondary)',
+                              }}
+                            >
+                              <span className="flex items-center gap-2">
+                                {isChatMuted ? <Volume2 size={12} /> : <VolumeX size={12} />}
+                                {isChatMuted ? 'Unmute Chat' : 'Mute Chat'}
+                              </span>
+                              {isChatMuted && <span className="text-[9px] font-bold" style={{ color: 'var(--accent)' }}>MUTED</span>}
+                            </button>
+                            <button
+                              onClick={handleToggleBlock}
+                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-all duration-150 cursor-pointer ${isBlockedUser
+                                ? 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20'
+                                : 'hover:border-red-500/20 hover:bg-red-500/10 hover:text-red-400'
+                                }`}
+                              style={!isBlockedUser ? { background: 'var(--bg-panel)', border: '1px solid var(--border-primary)', color: 'var(--text-secondary)' } : {}}
+                            >
+                              <span className="flex items-center gap-2">
+                                <Ban size={12} />
+                                {isBlockedUser ? 'Unblock User' : 'Block User'}
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
 
               <div className="pt-4 text-center text-[9px] font-mono uppercase tracking-widest mt-6" style={{ borderTop: '1px solid var(--border-primary)', color: 'var(--text-muted)' }}>
                 ECHO RESOUND

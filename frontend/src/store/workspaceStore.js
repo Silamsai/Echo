@@ -95,6 +95,23 @@ const useWorkspaceStore = create((set, get) => ({
             throw err;
         }
     },
+
+    deleteWorkspace: async (workspaceId) => {
+        try {
+            await axiosInstance.delete(`/workspace/${workspaceId}`);
+            set((state) => {
+                const remaining = state.workspaces.filter((w) => w._id !== workspaceId);
+                const nextActive = state.activeWorkspace?._id === workspaceId ? (remaining[0] || null) : state.activeWorkspace;
+                return {
+                    workspaces: remaining,
+                    activeWorkspace: nextActive,
+                };
+            });
+        } catch (err) {
+            console.error('Failed to delete workspace', err);
+            throw err;
+        }
+    },
 }));
 
 export default useWorkspaceStore;

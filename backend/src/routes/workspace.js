@@ -3,7 +3,7 @@ import { verifyToken } from '../middleware/verifyToken.js';
 import {
     createWorkspace, getWorkspaces, getWorkspaceById,
     addMemberToWorkspace, joinWorkspaceByCode,
-    createChannel, getWorkspaceChannels,
+    createChannel, getWorkspaceChannels, deleteWorkspace
 } from '../controllers/workspaceController.js';
 
 const workspace = new Hono();
@@ -18,5 +18,6 @@ workspace.get('/:workspaceId', getWorkspaceById);
 workspace.post('/:workspaceId/member', addMemberToWorkspace);
 workspace.post('/:workspaceId/channels', createChannel);
 workspace.get('/:workspaceId/channels', getWorkspaceChannels);
+workspace.delete('/:workspaceId', deleteWorkspace);
 
 export default workspace;

@@ -6,8 +6,10 @@ const useChatStore = create((set) => ({
   messages: {},       // { [conversationId]: Message[] }
   typingUsers: {},    // { [conversationId]: Set of userIds }
   onlineUsers: new Set(),
+  selectedProfileUser: null,
 
   setConversations: (convs) => set({ conversations: convs }),
+  setSelectedProfileUser: (user) => set({ selectedProfileUser: user }),
 
   addOrUpdateConversation: (conv) =>
     set((s) => {

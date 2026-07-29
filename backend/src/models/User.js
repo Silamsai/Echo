@@ -86,6 +86,18 @@ const userSchema = new mongoose.Schema(
                 ref: 'Conversation',
             },
         ],
+        mutedWorkspaces: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Workspace',
+            },
+        ],
+        pinnedWorkspaces: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Workspace',
+            },
+        ],
     },
     { timestamps: true }
 );

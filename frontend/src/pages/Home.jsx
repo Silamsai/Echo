@@ -35,7 +35,16 @@ const Home = () => {
 
   const handleBackToSidebar = () => {
     setMobileSidebarOpen(true);
+    setActiveConversation(null);
+    storeSetActive(null);
   };
+
+  useEffect(() => {
+    if (mobileSidebarOpen && window.innerWidth < 768) {
+      setActiveConversation(null);
+      storeSetActive(null);
+    }
+  }, [mobileSidebarOpen, storeSetActive]);
 
   /* ── Drag logic ── */
   const onMouseDown = useCallback((e) => {

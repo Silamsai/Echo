@@ -259,7 +259,7 @@ const Sidebar = ({ onSelectConversation, activeConversation }) => {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
+      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1 pb-20 md:pb-2">
         {filtered.length === 0 && (
           <div className="text-center py-12 font-mono text-[11px]" style={{ color: 'var(--text-muted)' }}>
             {conversations.length === 0 ? (
