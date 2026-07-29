@@ -6,6 +6,9 @@ const useWorkspaceStore = create((set, get) => ({
     activeWorkspace: null,
     workspaceChannels: [],
     isLoading: false,
+    sidebarTab: 'chats',
+
+    setSidebarTab: (sidebarTab) => set({ sidebarTab }),
 
     setWorkspaces: (workspaces) => set({ workspaces }),
     setActiveWorkspace: (activeWorkspace) => {

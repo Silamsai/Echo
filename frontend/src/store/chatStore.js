@@ -31,8 +31,12 @@ const useChatStore = create((set) => ({
     set((s) => {
       const convId = msg.conversation?._id || msg.conversation;
       const existing = s.messages[convId] || [];
-      const alreadyExists = existing.find((m) => m._id === msg._id);
-      if (alreadyExists) return s;
+      const idx = existing.findIndex((m) => m._id === msg._id);
+      if (idx !== -1) {
+        const copy = [...existing];
+        copy[idx] = msg;
+        return { messages: { ...s.messages, [convId]: copy } };
+      }
       return { messages: { ...s.messages, [convId]: [...existing, msg] } };
     }),
 
