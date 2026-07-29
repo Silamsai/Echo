@@ -200,3 +200,63 @@ export const unpinConversation = async (c) => {
         return c.json({ message: 'Server error.' }, 500);
     }
 };
+
+// ─── PUT /user/mute-workspace/:workspaceId ────────────────────────────────────
+export const muteWorkspace = async (c) => {
+    try {
+        const workspaceId = c.req.param('workspaceId');
+        const user = await User.findByIdAndUpdate(
+            c.get('user')._id,
+            { $addToSet: { mutedWorkspaces: workspaceId } },
+            { new: true }
+        ).select('-passwordHash');
+        return c.json(user, 200);
+    } catch (err) {
+        return c.json({ message: 'Server error.' }, 500);
+    }
+};
+
+// ─── PUT /user/unmute-workspace/:workspaceId ──────────────────────────────────
+export const unmuteWorkspace = async (c) => {
+    try {
+        const workspaceId = c.req.param('workspaceId');
+        const user = await User.findByIdAndUpdate(
+            c.get('user')._id,
+            { $pull: { mutedWorkspaces: workspaceId } },
+            { new: true }
+        ).select('-passwordHash');
+        return c.json(user, 200);
+    } catch (err) {
+        return c.json({ message: 'Server error.' }, 500);
+    }
+};
+
+// ─── PUT /user/pin-workspace/:workspaceId ────────────────────────────────────
+export const pinWorkspace = async (c) => {
+    try {
+        const workspaceId = c.req.param('workspaceId');
+        const user = await User.findByIdAndUpdate(
+            c.get('user')._id,
+            { $addToSet: { pinnedWorkspaces: workspaceId } },
+            { new: true }
+        ).select('-passwordHash');
+        return c.json(user, 200);
+    } catch (err) {
+        return c.json({ message: 'Server error.' }, 500);
+    }
+};
+
+// ─── PUT /user/unpin-workspace/:workspaceId ──────────────────────────────────
+export const unpinWorkspace = async (c) => {
+    try {
+        const workspaceId = c.req.param('workspaceId');
+        const user = await User.findByIdAndUpdate(
+            c.get('user')._id,
+            { $pull: { pinnedWorkspaces: workspaceId } },
+            { new: true }
+        ).select('-passwordHash');
+        return c.json(user, 200);
+    } catch (err) {
+        return c.json({ message: 'Server error.' }, 500);
+    }
+};

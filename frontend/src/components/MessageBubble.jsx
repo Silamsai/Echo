@@ -1,10 +1,12 @@
 import { CheckCheck, Check } from 'lucide-react';
 import { formatMessageTime } from '../utils/formatTime';
 import useAuthStore from '../store/authStore';
+import useChatStore from '../store/chatStore';
 import Avatar from './Avatar';
 
 const MessageBubble = ({ message }) => {
   const { user } = useAuthStore();
+  const { activeConversation, setSelectedProfileUser } = useChatStore();
   const isSent = message.sender?._id === user?._id || message.sender === user?._id;
 
   if (message.deleted) {
@@ -35,11 +37,25 @@ const MessageBubble = ({ message }) => {
           name={message.sender?.nickname || message.sender?.username}
           sizeClass="w-7 h-7"
           borderRadiusClass="rounded-lg"
+          onClick={() => {
+            if (message.sender) setSelectedProfileUser(message.sender);
+          }}
         />
       )}
 
       {/* Bubble Container */}
       <div className={`flex flex-col ${isSent ? 'items-end' : 'items-start'} max-w-[65%]`}>
+        {/* If group/channel chat, show clickable sender name */}
+        {!isSent && activeConversation?.isGroup && (
+          <span
+            onClick={() => {
+              if (message.sender) setSelectedProfileUser(message.sender);
+            }}
+            className="text-[10px] font-bold mb-1 hover:underline cursor-pointer select-none text-indigo-400 block"
+          >
+            {message.sender?.nickname || message.sender?.username}
+          </span>
+        )}
 
         {/* Render Image Message */}
         {message.type === 'image' && message.fileUrl && (

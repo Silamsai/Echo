@@ -24,7 +24,7 @@ const getInitials = (name) => {
     return clean.slice(0, 2).toUpperCase();
 };
 
-const Avatar = ({ src, name, sizeClass = 'w-9 h-9', borderRadiusClass = 'rounded-lg', isOnline, borderStyle = '1px solid var(--border-primary)' }) => {
+const Avatar = ({ src, name, sizeClass = 'w-9 h-9', borderRadiusClass = 'rounded-lg', isOnline, borderStyle = '1px solid var(--border-primary)', onClick }) => {
     const [imgError, setImgError] = useState(false);
 
     useEffect(() => {
@@ -35,7 +35,7 @@ const Avatar = ({ src, name, sizeClass = 'w-9 h-9', borderRadiusClass = 'rounded
     const bgColor = getInitialsColor(name);
 
     return (
-        <div className={`relative flex-shrink-0 ${sizeClass}`}>
+        <div className={`relative flex-shrink-0 ${sizeClass} ${onClick ? 'cursor-pointer hover:scale-105 active:scale-95 transition-all' : ''}`} onClick={onClick}>
             {!imgError && src ? (
                 <img
                     src={src}

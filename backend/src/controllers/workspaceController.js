@@ -252,3 +252,38 @@ export const getWorkspaceChannels = async (c) => {
         return c.json({ message: 'Server error.' }, 500);
     }
 };
+
+// ─── DELETE /workspace/:workspaceId ───────────────────────────────────────────
+export const deleteWorkspace = async (c) => {
+    try {
+        const workspaceId = c.req.param('workspaceId');
+        const currentUser = c.get('user');
+
+        const workspace = await Workspace.findById(workspaceId);
+        if (!workspace) return c.json({ message: 'Workspace not found.' }, 404);
+
+        if (workspace.owner.toString() === currentUser._id.toString()) {
+            await Conversation.deleteMany({ workspace: workspaceId });
+            await Workspace.findByIdAndDelete(workspaceId);
+            return c.json({ message: 'Workspace deleted successfully.' }, 200);
+        } else {
+            workspace.members = workspace.members.filter(
+                (mId) => mId.toString() !== currentUser._id.toString()
+            );
+            await workspace.save();
+
+            const channels = await Conversation.find({ workspace: workspaceId });
+            for (const channel of channels) {
+                channel.participants = channel.participants.filter(
+                    (pId) => pId.toString() !== currentUser._id.toString()
+                );
+                await channel.save();
+            }
+
+            return c.json({ message: 'Left workspace successfully.' }, 200);
+        }
+    } catch (err) {
+        console.error('Delete/Leave workspace error:', err);
+        return c.json({ message: 'Server error.' }, 500);
+    }
+};

@@ -4,7 +4,9 @@ import {
     searchUsers, getUserProfile, updateProfile,
     getConnections, blockUser, unblockUser,
     muteConversation, unmuteConversation,
-    pinConversation, unpinConversation
+    pinConversation, unpinConversation,
+    muteWorkspace, unmuteWorkspace,
+    pinWorkspace, unpinWorkspace
 } from '../controllers/userController.js';
 
 const user = new Hono();
@@ -21,5 +23,11 @@ user.put('/mute/:conversationId', verifyToken, muteConversation);
 user.put('/unmute/:conversationId', verifyToken, unmuteConversation);
 user.put('/pin/:conversationId', verifyToken, pinConversation);
 user.put('/unpin/:conversationId', verifyToken, unpinConversation);
+
+// Workspace controls
+user.put('/mute-workspace/:workspaceId', verifyToken, muteWorkspace);
+user.put('/unmute-workspace/:workspaceId', verifyToken, unmuteWorkspace);
+user.put('/pin-workspace/:workspaceId', verifyToken, pinWorkspace);
+user.put('/unpin-workspace/:workspaceId', verifyToken, unpinWorkspace);
 
 export default user;
