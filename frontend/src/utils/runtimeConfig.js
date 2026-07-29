@@ -1,5 +1,5 @@
 const DEFAULT_LOCAL_API_URL = 'http://localhost:5000';
-const DEFAULT_PRODUCTION_API_URL = 'https://echo-backend.tomai-backend.workers.dev';
+const DEFAULT_PRODUCTION_API_URL = 'https://echo-backend-server.tomai-backend.workers.dev';
 
 const normalizeUrl = (url) => (url || '').trim().replace(/\/+$/, '');
 
