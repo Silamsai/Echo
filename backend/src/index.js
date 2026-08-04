@@ -53,10 +53,20 @@ app.use('*', async (c, next) => {
         return await next();
     }
 
-    // Verify connections on each request (methods are optimized/cached internally)
-    await connectDB(env);
-    connectRedis(env);
-    initCloudinary(env);
+    try {
+        // Verify connections on each request (methods are optimized/cached internally)
+        await connectDB(env);
+        connectRedis(env);
+        initCloudinary(env);
+    } catch (err) {
+        console.error('Dependency init failed:', err);
+        // Google OAuth is a top-level browser redirect — never return JSON/crash page
+        if (path.startsWith('/auth/google')) {
+            const frontendUrl = (env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, '');
+            return c.redirect(`${frontendUrl}/login?error=google_auth_failed`);
+        }
+        throw err;
+    }
 
     await next();
 });
@@ -115,8 +125,14 @@ app.notFound((c) => c.json({ message: 'Route not found.' }, 404));
 app.onError((err, c) => {
     console.error('Unhandled error:', err);
 
+    const frontendUrl = (c.env?.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, '');
+
+    // OAuth callback is a browser navigation — redirect instead of JSON/blank error page
+    if (c.req.path.startsWith('/auth/google')) {
+        return c.redirect(`${frontendUrl}/login?error=google_auth_failed`);
+    }
+
     // Append CORS headers for error responses to avoid chrome blocking them as CORS anomalies
-    const frontendUrl = c.env?.FRONTEND_URL || 'http://localhost:5173';
     c.header('Access-Control-Allow-Origin', frontendUrl);
     c.header('Access-Control-Allow-Credentials', 'true');
     c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
