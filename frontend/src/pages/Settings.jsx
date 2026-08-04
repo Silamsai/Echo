@@ -9,6 +9,7 @@ import {
   requestDesktopNotificationPermission,
   setBooleanPreference,
 } from '../utils/userPreferences';
+import { getUserAvatar } from '../utils/avatar';
 
 const Settings = () => {
   const { user } = useAuthStore();
@@ -53,8 +54,7 @@ const Settings = () => {
     setBooleanPreference(preferenceKeys.showTyping, showTyping);
   }, [showTyping]);
 
-  const getAvatar = () =>
-    user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username}`;
+  const getAvatar = () => getUserAvatar(user);
 
   const handleDesktopNotifToggle = async () => {
     const nextValue = !desktopNotif;
@@ -297,6 +297,7 @@ const Settings = () => {
                       src={getAvatar()}
                       alt="avatar"
                       className="w-20 h-20 rounded-2xl object-cover border border-pri"
+                      referrerPolicy="no-referrer"
                     />
                   </div>
 

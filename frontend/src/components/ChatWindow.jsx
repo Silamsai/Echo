@@ -18,11 +18,12 @@ import useMediaRecorder from '../hooks/useMediaRecorder';
 import { formatLastSeen } from '../utils/formatTime';
 import useConfigStore from '../store/configStore';
 import { isTypingIndicatorsEnabled } from '../utils/userPreferences';
+import { getUserAvatar, getGroupAvatar } from '../utils/avatar';
 
 /* ─── Utility ─── */
-const getAvatar = (u) => u?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u?.username}`;
+const getAvatar = (u) => getUserAvatar(u);
 const makeRoomName = (conversationId) => `echo_room_${conversationId}`;
-const getFallbackGroupAvatar = (name) => `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name || 'Group')}&backgroundColor=7b6ef6`;
+const getFallbackGroupAvatar = (name) => getGroupAvatar({ name });
 
 /* ─── Load persisted chat theme and apply to element ─── */
 const getChatThemeClass = () => {
@@ -139,8 +140,11 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
   useEffect(() => {
     if (!conversationId) return;
     axiosInstance.get(`/message/${conversationId}`).then(({ data }) => {
-      setMessages(conversationId, data);
-    }).catch(() => { });
+      setMessages(conversationId, Array.isArray(data) ? data : []);
+    }).catch((err) => {
+      console.error('Failed to load messages:', err);
+      toast.error(err.response?.data?.message || 'Failed to load messages.');
+    });
   }, [conversationId, setMessages]);
 
   /* ─── Scroll to bottom ─── */
@@ -418,6 +422,7 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
                   alt={conversation?.isGroup ? conversation.name : other?.username}
                   className="w-9 h-9 rounded-xl object-cover"
                   style={{ border: '1px solid var(--border-primary)' }}
+                  referrerPolicy="no-referrer"
                 />
                 {!conversation?.isGroup && other?.isOnline && (
                   <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 border-2 rounded-full shadow-lg"
@@ -568,7 +573,7 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
             ) : (
               isOtherTyping && (
                 <div className="flex items-center gap-2 mb-2 fade-in">
-                  <img src={getAvatar(other)} alt="" className="w-7 h-7 rounded-lg object-cover" />
+                  <img src={getAvatar(other)} alt="" className="w-7 h-7 rounded-lg object-cover" referrerPolicy="no-referrer" />
                   <div className="bubble-received flex items-center gap-1.5 py-3.5 px-4">
                     <div className="typing-dot" /><div className="typing-dot" /><div className="typing-dot" />
                   </div>
@@ -851,6 +856,7 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
                               src={getAvatar(p)}
                               alt=""
                               className="w-5 h-5 rounded object-cover group-hover/item:scale-105 transition-transform"
+                              referrerPolicy="no-referrer"
                             />
                             <span className="truncate" style={{ color: 'var(--text-primary)' }}>
                               {p.nickname || p.username}
@@ -920,7 +926,7 @@ const ChatWindow = ({ conversation: initialConversation, onBack }) => {
                 return (
                   <>
                     <div className="flex flex-col items-center text-center pb-5 mb-5" style={{ borderBottom: '1px solid var(--border-primary)' }}>
-                      <img src={getAvatar(profileUser)} alt="" className="w-16 h-16 rounded-xl object-cover mb-3.5" style={{ border: '1px solid var(--border-primary)' }} />
+                      <img src={getAvatar(profileUser)} alt="" className="w-16 h-16 rounded-xl object-cover mb-3.5" style={{ border: '1px solid var(--border-primary)' }} referrerPolicy="no-referrer" />
                       <h4 className="text-sm font-extrabold leading-none" style={{ color: 'var(--text-primary)' }}>{profileUser?.nickname || profileUser?.username}</h4>
                       <div className={`mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-mono border ${profileUser?.isOnline
                         ? 'bg-green-500/5 text-green-400 border-green-500/20'

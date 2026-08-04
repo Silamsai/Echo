@@ -26,18 +26,44 @@ const seedAdmin = async () => {
 
 let connectionPromise = null;
 
+const pingMongo = async () => {
+    await Promise.race([
+        mongoose.connection.db.admin().command({ ping: 1 }),
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Mongo ping timeout')), 2500)
+        ),
+    ]);
+};
+
 export const connectDB = async (env) => {
-    // Reuse an existing live connection. Do NOT close/reopen on idle —
-    // mongoose.connection.close() on Cloudflare Workers can crash the
-    // isolate (Error 1101), which shows up as a blank page after Google OAuth.
-    if (mongoose.connection.readyState === 1) {
-        return;
+    if (!env?.MONGO_URI) {
+        throw new Error('MONGO_URI is not configured.');
     }
 
-    // Connecting / disconnecting — wait for in-flight connect, otherwise reconnect
+    // Cloudflare freezes isolates — TCP sockets die while mongoose still reports connected.
+    if (mongoose.connection.readyState === 1) {
+        try {
+            await pingMongo();
+            return;
+        } catch (err) {
+            console.log('⚠️ Stale MongoDB connection detected, reconnecting...', err.message);
+            connectionPromise = null;
+            try {
+                await mongoose.disconnect();
+            } catch {
+                // ignore — connection may already be dead
+            }
+        }
+    }
+
     if (mongoose.connection.readyState === 2 && connectionPromise) {
         await connectionPromise;
-        return;
+        try {
+            await pingMongo();
+            return;
+        } catch {
+            connectionPromise = null;
+        }
     }
 
     if (connectionPromise) {
@@ -45,25 +71,20 @@ export const connectDB = async (env) => {
         return;
     }
 
-    if (!env?.MONGO_URI) {
-        throw new Error('MONGO_URI is not configured.');
-    }
-
     try {
         connectionPromise = mongoose.connect(env.MONGO_URI, {
-            autoIndex: false, // Disable auto indexing in production to avoid CPU time-outs on cold starts
-            maxPoolSize: 1,   // Set pool size to 1 to reduce TLS handshakes and save critical CPU cycles
-            minPoolSize: 0,   // Do not keep idle connections open
-            serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-            socketTimeoutMS: 10000,         // Timeout socket after 10s
-            connectTimeoutMS: 5000,         // Timeout connection handshake after 5s
-            family: 4,                      // Force IPv4 (faster DNS lookups in Cloudflare Workers)
+            autoIndex: false,
+            maxPoolSize: 1,
+            minPoolSize: 0,
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 10000,
+            connectTimeoutMS: 5000,
+            bufferCommands: false,
         });
 
         await connectionPromise;
         console.log('✅ MongoDB Connected successfully.');
 
-        // Only seed admin in development to save critical CPU time on worker instances
         if (env.NODE_ENV === 'development') {
             await seedAdmin();
         }

@@ -156,10 +156,35 @@ const Sidebar = ({ onSelectConversation, activeConversation }) => {
   }, [user, fetchWorkspaces]);
 
   useEffect(() => {
-    axiosInstance.get('/conversation')
-      .then(({ data }) => setConversations(data))
-      .catch(() => { });
-  }, [setConversations]);
+    if (!user?._id) return;
+
+    let cancelled = false;
+    const loadConversations = async () => {
+      try {
+        const { data } = await axiosInstance.get('/conversation');
+        if (!cancelled) {
+          setConversations(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        if (cancelled) return;
+        console.error('Failed to load conversations:', err);
+        toast.error(err.response?.data?.message || 'Failed to load chats.');
+      }
+    };
+
+    loadConversations();
+
+    // Refetch when tab becomes visible again (covers missed loads after OAuth)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') loadConversations();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      cancelled = true;
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [user?._id, setConversations]);
 
   useEffect(() => {
     if (groupModalOpen) {
@@ -390,6 +415,18 @@ const Sidebar = ({ onSelectConversation, activeConversation }) => {
                     <p className="text-[9px]" style={{ color: 'var(--text-muted)' }}>
                       Search contacts to start chatting
                     </p>
+                  </div>
+                ) : activeWorkspace ? (
+                  <div className="px-4 flex flex-col items-center gap-2">
+                    <p className="font-semibold" style={{ color: 'var(--text-secondary)' }}>No chats in this workspace</p>
+                    <button
+                      type="button"
+                      className="text-[10px] underline"
+                      style={{ color: 'var(--accent)' }}
+                      onClick={() => setActiveWorkspace(null)}
+                    >
+                      Show direct messages
+                    </button>
                   </div>
                 ) : (
                   <p>No chats found</p>

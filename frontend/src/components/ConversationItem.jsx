@@ -4,13 +4,16 @@ import { BsPinAngleFill, BsVolumeMuteFill } from 'react-icons/bs';
 import useChatStore from '../store/chatStore';
 import useAuthStore from '../store/authStore';
 import Avatar from './Avatar';
+import { getUserAvatar, getGroupAvatar } from '../utils/avatar';
 
 const ConversationItem = ({ conversation, isActive, onClick }) => {
   const { user } = useAuthStore();
   const { typingUsers } = useChatStore();
 
   const other = conversation.isGroup ? null : conversation.participants?.find((p) => p._id !== user?._id);
-  const avatar = conversation.isGroup ? conversation.groupAvatar : other?.avatar;
+  const avatar = conversation.isGroup
+    ? getGroupAvatar(conversation)
+    : getUserAvatar(other);
   const getTypingText = () => {
     const ids = typingUsers[conversation._id];
     if (!ids || ids.size === 0) return null;

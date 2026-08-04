@@ -37,7 +37,7 @@ const useAuthStore = create((set) => ({
 
   loginWithToken: (token, user) => {
     localStorage.setItem('echo_token', token);
-    set({ user, token });
+    set({ user, token, isInitialized: true });
     initSocket(token);
   },
 

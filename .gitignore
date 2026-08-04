@@ -47,3 +47,5 @@ desktop.ini
 # ─── Vite / Bundler Cache ────────────────────────────────────────
 .vite/
 *.local
+.vercel
+.env*

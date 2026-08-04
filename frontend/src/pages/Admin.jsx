@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import axiosInstance from '../utils/axiosInstance';
 import { formatRelativeTime } from '../utils/formatTime';
 import useConfigStore from '../store/configStore';
+import { getUserAvatar } from '../utils/avatar';
 
 const StatCard = ({ icon: Icon, label, value, color }) => (
   <div className="glass rounded-2xl p-5 flex items-center gap-4">
@@ -161,7 +162,7 @@ const Admin = () => {
     }
   };
 
-  const getAvatar = (u) => u?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u?.username}`;
+  const getAvatar = (u) => getUserAvatar(u);
 
   return (
     <div className="flex-1 overflow-y-auto p-6">
@@ -207,7 +208,7 @@ const Admin = () => {
             <div className="space-y-2">
               {users.map((u) => (
                 <div key={u._id} className="glass rounded-xl px-4 py-3 flex items-center gap-3">
-                  <img src={getAvatar(u)} alt="" className="w-9 h-9 rounded-full object-cover" />
+                  <img src={getAvatar(u)} alt="" className="w-9 h-9 rounded-full object-cover" referrerPolicy="no-referrer" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-sm text-white">@{u.username}</span>
@@ -255,7 +256,7 @@ const Admin = () => {
           <div className="space-y-2">
             {messages.map((m) => (
               <div key={m._id} className="glass rounded-xl px-4 py-3 flex items-start gap-3">
-                <img src={getAvatar(m.sender)} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-0.5" />
+                <img src={getAvatar(m.sender)} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-0.5" referrerPolicy="no-referrer" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-sm font-medium text-white">@{m.sender?.username}</span>

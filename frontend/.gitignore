@@ -37,3 +37,5 @@ desktop.ini
 # ─── Vite / Build cache ──────────────────────────────────────────
 .vite/
 *.local
+.vercel
+.env*

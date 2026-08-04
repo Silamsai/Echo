@@ -6,6 +6,7 @@ import useNotificationStore from '../store/notificationStore';
 import useChatStore from '../store/chatStore';
 import { getSocket } from '../socket/socket';
 import { formatRelativeTime } from '../utils/formatTime';
+import { getUserAvatar } from '../utils/avatar';
 
 const Notifications = () => {
   const { echoRequests, setEchoRequests, removeEchoRequest } = useNotificationStore();
@@ -16,8 +17,7 @@ const Notifications = () => {
     axiosInstance.get('/echo/pending').then(({ data }) => setEchoRequests(data)).catch(() => {});
   }, [setEchoRequests]);
 
-  const getAvatar = (u) =>
-    u?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u?.username}`;
+  const getAvatar = (u) => getUserAvatar(u);
 
   const handleAccept = async (req) => {
     setLoadingId(req._id);
@@ -86,6 +86,7 @@ const Notifications = () => {
                   src={getAvatar(req.sender)}
                   alt={req.sender?.username}
                   className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                  referrerPolicy="no-referrer"
                 />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-pri">@{req.sender?.username}</p>

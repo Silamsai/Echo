@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import axiosInstance from '../utils/axiosInstance';
 import useAuthStore from '../store/authStore';
+import { getUserAvatar } from '../utils/avatar';
 
 const Profile = () => {
   const { user, updateUser, logout } = useAuthStore();
@@ -19,8 +20,7 @@ const Profile = () => {
     navigate('/login');
   };
 
-  const getAvatar = () =>
-    avatarPreview || user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username}`;
+  const getAvatar = () => avatarPreview || getUserAvatar(user);
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
@@ -65,6 +65,7 @@ const Profile = () => {
                 src={getAvatar()}
                 alt="avatar"
                 className="w-28 h-28 rounded-full object-cover border-4 border-indigo-500/30"
+                referrerPolicy="no-referrer"
               />
               <button
                 id="change-avatar-btn"

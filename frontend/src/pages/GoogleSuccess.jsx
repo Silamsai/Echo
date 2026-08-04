@@ -1,15 +1,38 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
 import axiosInstance from '../utils/axiosInstance';
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+const fetchMeWithRetry = async (attempts = 4) => {
+  let lastError;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const { data } = await axiosInstance.get('/auth/me');
+      return data;
+    } catch (err) {
+      lastError = err;
+      // Retry transient Worker/DB failures after Google redirect
+      if (i < attempts - 1) {
+        await sleep(400 * (i + 1));
+      }
+    }
+  }
+  throw lastError;
+};
+
 const GoogleSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { loginWithToken } = useAuthStore();
+  const ran = useRef(false);
 
   useEffect(() => {
+    if (ran.current) return;
+    ran.current = true;
+
     const token = searchParams.get('token');
     if (!token) {
       toast.error('Google login failed.');
@@ -17,19 +40,20 @@ const GoogleSuccess = () => {
       return;
     }
 
-    // Save the token to local storage first so the Axios request interceptor picks it up
     localStorage.setItem('echo_token', token);
 
-    axiosInstance.get('/auth/me').then(({ data }) => {
-      loginWithToken(token, data);
-      toast.success(`Welcome, ${data.username}! 🎉`);
-      navigate('/');
-    }).catch((err) => {
-      localStorage.removeItem('echo_token');
-      console.error('Google login verification failed:', err);
-      toast.error('Google login failed.');
-      navigate('/login');
-    });
+    fetchMeWithRetry()
+      .then((data) => {
+        loginWithToken(token, data);
+        toast.success(`Welcome, ${data.username}!`);
+        navigate('/');
+      })
+      .catch((err) => {
+        localStorage.removeItem('echo_token');
+        console.error('Google login verification failed:', err);
+        toast.error('Google login failed. Please try again.');
+        navigate('/login');
+      });
   }, [searchParams, navigate, loginWithToken]);
 
   return (
