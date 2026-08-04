@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { MessageSquare, Lock, Mic, Globe, Shield, Mail, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useAuthStore from '../store/authStore';
@@ -28,6 +28,7 @@ const Login = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { login, isLoading } = useAuthStore();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     const handleResize = () => {
@@ -36,6 +37,17 @@ const Login = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    const error = searchParams.get('error');
+    if (!error) return;
+    if (error === 'google_failed' || error === 'google_auth_failed') {
+      toast.error('Google login failed. Please try again.');
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete('error');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

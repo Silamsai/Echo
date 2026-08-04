@@ -25,31 +25,28 @@ const seedAdmin = async () => {
 };
 
 let connectionPromise = null;
-let lastRequestTime = 0;
 
 export const connectDB = async (env) => {
-    const now = Date.now();
-    const isRecentlyActive = (now - lastRequestTime) < 10000; // 10 seconds threshold
-    lastRequestTime = now;
-
-    // If we think we are connected, check if the connection is recently active
+    // Reuse an existing live connection. Do NOT close/reopen on idle —
+    // mongoose.connection.close() on Cloudflare Workers can crash the
+    // isolate (Error 1101), which shows up as a blank page after Google OAuth.
     if (mongoose.connection.readyState === 1) {
-        if (isRecentlyActive) {
-            // Connection is active and warm, skip any checks and reuse instantly
-            return;
-        } else {
-            // Isolate was idle/frozen, connection might be stale. Reset and reconnect.
-            console.log('⚠️ MongoDB connection idle limit exceeded. Reconnecting...');
-            try {
-                await mongoose.connection.close();
-            } catch (e) { }
-        }
+        return;
     }
 
-    // If already in the process of connecting, reuse that connection promise to prevent socket collisions
+    // Connecting / disconnecting — wait for in-flight connect, otherwise reconnect
+    if (mongoose.connection.readyState === 2 && connectionPromise) {
+        await connectionPromise;
+        return;
+    }
+
     if (connectionPromise) {
         await connectionPromise;
         return;
+    }
+
+    if (!env?.MONGO_URI) {
+        throw new Error('MONGO_URI is not configured.');
     }
 
     try {
