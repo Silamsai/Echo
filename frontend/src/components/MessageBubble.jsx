@@ -5,6 +5,7 @@ import useChatStore from '../store/chatStore';
 import Avatar from './Avatar';
 import axiosInstance from '../utils/axiosInstance';
 import toast from 'react-hot-toast';
+import { getUserAvatar } from '../utils/avatar';
 
 const MessageBubble = ({ message, searchQuery }) => {
   const { user } = useAuthStore();
@@ -59,15 +60,12 @@ const MessageBubble = ({ message, searchQuery }) => {
   // Poll Vote Calculations
   const totalVotes = message.pollOptions?.reduce((sum, opt) => sum + (opt.votes?.length || 0), 0) || 0;
 
-  // Helper to extract avatar
-  const getAvatar = (u) => u?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u?.username}`;
-
   return (
     <div className={`flex ${isSent ? 'justify-end' : 'justify-start'} mb-2.5 fade-in items-end gap-2`}>
       {/* Received Avatar on Left */}
       {!isSent && (
         <Avatar
-          src={message.sender?.avatar}
+          src={getUserAvatar(message.sender)}
           name={message.sender?.nickname || message.sender?.username}
           sizeClass="w-7 h-7"
           borderRadiusClass="rounded-lg"

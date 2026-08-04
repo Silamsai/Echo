@@ -16,11 +16,18 @@ export const connectRedis = (env) => {
     if (redis) return redis;
 
     const redisUrl = env?.REDIS_URL;
+    // ioredis uses Node net sockets and can crash Cloudflare Worker isolates (Error 1101).
+    // Always use MockRedis inside Workers; real Redis is for the Node socket server.
+    const isCloudflareWorker =
+        typeof WebSocketPair !== 'undefined' ||
+        (typeof caches !== 'undefined' && typeof caches.default !== 'undefined');
 
-    // In serverless deployment without active Socket.io, Redis is not needed.
-    // Fall back to MockRedis to prevent attempt to connect to localhost:6379.
-    if (!redisUrl) {
-        console.log('⚠️ No REDIS_URL provided; using MockRedis fallback.');
+    if (!redisUrl || isCloudflareWorker) {
+        if (!redisUrl) {
+            console.log('⚠️ No REDIS_URL provided; using MockRedis fallback.');
+        } else {
+            console.log('⚠️ Cloudflare Worker detected; using MockRedis (skip ioredis).');
+        }
         redis = new MockRedis();
         return redis;
     }

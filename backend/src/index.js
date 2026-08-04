@@ -47,22 +47,28 @@ app.use('*', async (c, next) => {
 
     const path = c.req.path;
     const method = c.req.method;
-    // Skip heavy dependency handshakes for endpoints that do not need them
-    // Skip GET /config as it leverages memory cache to avoid DB handshakes
+    const frontendUrl = (env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, '');
+
+    // Lightweight Google OAuth paths — avoid Redis/Cloudinary (ioredis can 1101 on Workers)
     if (path === '/health' || path === '/livekit' || path === '/auth/google' || (path === '/config' && method === 'GET')) {
         return await next();
     }
 
+    // No auth code yet (user cancelled / Google error) — redirect without touching DB
+    if (path === '/auth/google/callback' && !c.req.query('code')) {
+        return c.redirect(`${frontendUrl}/login?error=google_failed`);
+    }
+
     try {
-        // Verify connections on each request (methods are optimized/cached internally)
         await connectDB(env);
-        connectRedis(env);
-        initCloudinary(env);
+        // OAuth callback only needs Mongo + Google HTTP — skip Redis/Cloudinary to reduce 1101 risk
+        if (path !== '/auth/google/callback') {
+            connectRedis(env);
+            initCloudinary(env);
+        }
     } catch (err) {
         console.error('Dependency init failed:', err);
-        // Google OAuth is a top-level browser redirect — never return JSON/crash page
         if (path.startsWith('/auth/google')) {
-            const frontendUrl = (env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, '');
             return c.redirect(`${frontendUrl}/login?error=google_auth_failed`);
         }
         throw err;

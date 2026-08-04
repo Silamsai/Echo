@@ -9,6 +9,7 @@ import useChatStore from '../store/chatStore';
 import useWorkspaceStore from '../store/workspaceStore';
 import { useEffect, useState } from 'react';
 import WorkspaceModal from './WorkspaceModal';
+import { getUserAvatar } from '../utils/avatar';
 
 const EchoMark = ({ size = 28 }) => (
   <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
@@ -194,6 +195,7 @@ const LeftNavbar = () => {
 
   const handleSelectTab = (tab) => {
     setSidebarTab(tab);
+    // Always clear workspace when switching primary nav so DMs are not hidden
     setActiveWorkspace(null);
     useChatStore.getState().setActiveConversation(null);
     navigate('/');
@@ -209,8 +211,7 @@ const LeftNavbar = () => {
     ...(user?.isAdmin ? [{ key: 'admin', icon: Shield, path: '/admin', label: 'Admin' }] : []),
   ];
 
-  const getAvatar = () =>
-    user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username}`;
+  const getAvatar = () => getUserAvatar(user);
 
   const { activeConversation } = useChatStore();
   const showMobileBottomBar = location.pathname !== '/' || !activeConversation;
@@ -365,7 +366,7 @@ const LeftNavbar = () => {
               boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
             }}
           >
-            <img src={getAvatar()} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={getAvatar()} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
           </div>
 
           <button

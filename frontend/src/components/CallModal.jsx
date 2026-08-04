@@ -8,10 +8,11 @@ import {
 } from 'livekit-client';
 import { Phone, Video, VideoOff, Mic, MicOff, X, PhoneOff } from 'lucide-react';
 import axiosInstance from '../utils/axiosInstance';
+import { getUserAvatar } from '../utils/avatar';
 
 /* ─── helpers ─── */
 const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-const avatar = (u) => u?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u?.username}`;
+const avatar = (u) => getUserAvatar(u);
 
 /* ────────────────────────────────────────────────────────────────────────────
    CallModal
@@ -150,7 +151,7 @@ const CallModal = ({ state, callType, roomName, other, localUser, onEnd, onAccep
           <div style={{ position: 'relative', marginBottom: 24 }}>
             <div style={pingRing1} />
             <div style={pingRing2} />
-            <img src={avatar(other)} alt="" style={avatarLg} />
+            <img src={avatar(other)} alt="" style={avatarLg} referrerPolicy="no-referrer" />
           </div>
           <p style={callLabelStyle}>
             {callType === 'video' ? '🎥 Incoming Video Call' : '📞 Incoming Voice Call'}
@@ -207,7 +208,7 @@ const CallModal = ({ state, callType, roomName, other, localUser, onEnd, onAccep
             />
             {!remoteConnected && (
               <div style={videoPlaceholder}>
-                <img src={avatar(other)} alt="" style={{ width: 80, height: 80, borderRadius: 16, opacity: 0.7 }} />
+                <img src={avatar(other)} alt="" style={{ width: 80, height: 80, borderRadius: 16, opacity: 0.7 }} referrerPolicy="no-referrer" />
                 <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 10 }}>Waiting for {other?.nickname || other?.username}…</p>
               </div>
             )}
@@ -231,7 +232,7 @@ const CallModal = ({ state, callType, roomName, other, localUser, onEnd, onAccep
                 <div style={{ ...pingRing2, width: 120, height: 120 }} />
               </>
             )}
-            <img src={avatar(other)} alt="" style={{ width: 100, height: 100, borderRadius: 24, border: '2px solid rgba(124,109,250,0.4)', position: 'relative', zIndex: 2 }} />
+            <img src={avatar(other)} alt="" style={{ width: 100, height: 100, borderRadius: 24, border: '2px solid rgba(124,109,250,0.4)', position: 'relative', zIndex: 2 }} referrerPolicy="no-referrer" />
           </div>
         )}
 

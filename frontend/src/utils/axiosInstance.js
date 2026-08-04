@@ -14,10 +14,30 @@ axiosInstance.interceptors.request.use((config) => {
 
 axiosInstance.interceptors.response.use(
   (res) => res,
-  (err) => {
-    if (err.response?.status === 401) {
+  async (err) => {
+    const config = err.config;
+    const status = err.response?.status;
+
+    // Retry transient Worker/DB failures (common on Cloudflare cold/stale isolates)
+    const method = (config?.method || 'get').toLowerCase();
+    const retriable =
+      config &&
+      method === 'get' &&
+      !config.__retryCount &&
+      (!err.response || status >= 500 || status === 429);
+
+    if (retriable) {
+      config.__retryCount = 1;
+      await new Promise((r) => setTimeout(r, 500));
+      return axiosInstance(config);
+    }
+
+    if (status === 401) {
       localStorage.removeItem('echo_token');
-      window.location.href = '/login';
+      // Don't hard-redirect during Google success handoff
+      if (!window.location.pathname.includes('google-success')) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(err);
   }

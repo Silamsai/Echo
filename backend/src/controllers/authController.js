@@ -204,14 +204,19 @@ export const googleRedirect = (c) => {
 // ─── GET /auth/google/callback ────────────────────────────────────────────────
 export const googleCallback = async (c) => {
     const frontendUrl = (c.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, '');
+    const fail = (reason = 'google_auth_failed') => c.redirect(`${frontendUrl}/login?error=${reason}`);
 
     try {
         const code = c.req.query('code');
         if (!code) {
-            return c.redirect(`${frontendUrl}/login?error=google_failed`);
+            return fail('google_failed');
         }
 
         const callbackUrl = c.env.GOOGLE_CALLBACK_URL || `${new URL(c.req.url).origin}/auth/google/callback`;
+        if (!c.env.GOOGLE_CLIENT_ID || !c.env.GOOGLE_CLIENT_SECRET) {
+            console.error('Google OAuth secrets missing');
+            return fail('google_failed');
+        }
 
         // Exchange code for tokens
         const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
@@ -229,7 +234,7 @@ export const googleCallback = async (c) => {
         const tokenData = await tokenRes.json();
         if (!tokenData.access_token) {
             console.error('Google token exchange failed:', tokenData);
-            return c.redirect(`${frontendUrl}/login?error=google_failed`);
+            return fail('google_failed');
         }
 
         // Fetch user profile
@@ -237,39 +242,63 @@ export const googleCallback = async (c) => {
             headers: { Authorization: `Bearer ${tokenData.access_token}` },
         });
         const profile = await profileRes.json();
+        if (!profile?.id || !profile?.email) {
+            console.error('Google profile incomplete:', profile);
+            return fail('google_failed');
+        }
 
-        // Find or create user
+        const email = String(profile.email).toLowerCase().trim();
+        const picture = profile.picture || '';
+        const displayName = String(profile.name || '').trim().slice(0, 30);
+
+        // Find or create user — always refresh Google profile photo when present
         let user = await User.findOne({ googleId: profile.id });
         if (!user) {
-            user = await User.findOne({ email: profile.email.toLowerCase() });
+            user = await User.findOne({ email });
             if (user) {
                 user.googleId = profile.id;
                 user.provider = 'google';
+                if (picture) user.avatar = picture;
+                if (displayName && !user.nickname) user.nickname = displayName;
                 await user.save();
             } else {
-                const baseUsername = (profile.name || 'user').replace(/\s+/g, '').toLowerCase();
+                const baseUsername = (profile.name || 'user').replace(/\s+/g, '').toLowerCase().slice(0, 24) || 'user';
                 let username = baseUsername;
                 let counter = 1;
                 while (await User.findOne({ username })) {
-                    username = `${baseUsername}${counter++}`;
+                    username = `${baseUsername}${counter++}`.slice(0, 30);
                 }
                 user = await User.create({
                     googleId: profile.id,
                     username,
-                    email: profile.email.toLowerCase(),
-                    avatar: profile.picture || '',
+                    email,
+                    avatar: picture,
+                    nickname: displayName,
                     provider: 'google',
                     isVerified: true,
                 });
             }
+        } else if (picture && user.avatar !== picture) {
+            user.avatar = picture;
+            if (displayName && !user.nickname) user.nickname = displayName;
+            await user.save();
+        }
+
+        if (!c.env.JWT_SECRET) {
+            console.error('JWT_SECRET missing');
+            return fail('google_auth_failed');
         }
 
         const token = generateToken(user, c.env);
         console.log(`✅ Google OAuth success → redirecting to ${frontendUrl}/google-success`);
-        return c.redirect(`${frontendUrl}/google-success?token=${token}`);
+        return c.redirect(`${frontendUrl}/google-success?token=${encodeURIComponent(token)}`);
     } catch (err) {
-        console.error('Google callback error:', err);
-        return c.redirect(`${frontendUrl}/login?error=google_auth_failed`);
+        console.error('Google callback error:', err?.message || err, err?.stack);
+        try {
+            return fail('google_auth_failed');
+        } catch {
+            return new Response('Google login failed', { status: 302, headers: { Location: `${frontendUrl}/login?error=google_auth_failed` } });
+        }
     }
 };
 
@@ -279,12 +308,11 @@ export const getMe = async (c) => {
         const user = c.get('user');
         if (!user) return c.json({ message: 'User not found.' }, 401);
 
-        // Convert to plain object to avoid Mongoose serialization issues in serverless Worker environments
-        const userObj = user.toObject ? user.toObject() : user;
-        delete userObj.passwordHash;
-
-        return c.json(userObj, 200);
+        // User from verifyToken is already a lean plain object
+        const { passwordHash, ...safeUser } = user;
+        return c.json(safeUser, 200);
     } catch (err) {
+        console.error('getMe error:', err?.message || err);
         return c.json({ message: 'Server error.', error: err.message }, 500);
     }
 };

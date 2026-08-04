@@ -12,15 +12,23 @@ export const verifyToken = async (c, next) => {
             return c.json({ message: 'No token provided.' }, 401);
         }
         const token = authHeader.split(' ')[1];
+        if (!c.env?.JWT_SECRET) {
+            return c.json({ message: 'Auth is not configured.' }, 500);
+        }
         const decoded = jwt.verify(token, c.env.JWT_SECRET);
+        if (!decoded?.userId) {
+            return c.json({ message: 'Invalid or expired token.' }, 401);
+        }
 
-        const user = await User.findById(decoded.userId).select('-passwordHash');
+        // lean() avoids Mongoose document serialization crashes on Workers
+        const user = await User.findById(decoded.userId).select('-passwordHash').lean();
         if (!user) return c.json({ message: 'User not found.' }, 401);
         if (user.isBanned) return c.json({ message: 'Account is banned.' }, 403);
 
         c.set('user', user);
         await next();
     } catch (err) {
+        console.error('verifyToken error:', err?.message || err);
         return c.json({ message: 'Invalid or expired token.' }, 401);
     }
 };

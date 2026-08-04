@@ -9,6 +9,7 @@ import {
   isDesktopNotificationsEnabled,
   isSoundEnabled,
 } from '../utils/userPreferences';
+import { getUserAvatar } from '../utils/avatar';
 
 const useSocket = () => {
   const { user } = useAuthStore();
@@ -51,7 +52,7 @@ const useSocket = () => {
         showDesktopNotification({
           title: senderName,
           body: preview || 'New message received',
-          icon: message.sender?.avatar,
+          icon: getUserAvatar(message.sender),
           tag: `message-${convId}`,
         });
       }
@@ -70,7 +71,7 @@ const useSocket = () => {
         showDesktopNotification({
           title: 'New connection request',
           body: `${senderName} wants to connect with you.`,
-          icon: request?.sender?.avatar,
+          icon: getUserAvatar(request?.sender),
           tag: `request-${request?._id}`,
         });
       }
@@ -82,9 +83,10 @@ const useSocket = () => {
             style={{ minWidth: 280 }}
           >
             <img
-              src={request?.sender?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${request?.sender?.username}`}
+              src={getUserAvatar(request?.sender)}
               alt=""
               className="w-10 h-10 rounded-full"
+              referrerPolicy="no-referrer"
             />
             <div>
               <p className="font-semibold text-sm text-white">{request?.sender?.username}</p>
